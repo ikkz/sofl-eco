@@ -1,0 +1,47 @@
+==================
+Moudle
+==================
+
+module ATM;
+type
+    TA = int;
+    TB = string;
+    TC = {<A>, <B>, <C>};
+    TD = set of TA;
+    TE = list of TB;
+    TF = composed of
+      name: TB;
+      props: TD;
+    end;
+---
+  (source_file
+      (module_definition
+        (identifier))
+      (type_definition
+        (type_definition_item
+          (identifier)
+          (primitive_type))
+        (type_definition_item
+          (identifier)
+          (primitive_type))
+        (type_definition_item
+          (identifier)
+          (enumeration_type
+            (identifier)
+            (identifier)
+            (identifier)))
+        (type_definition_item
+          (identifier)
+          (set_type
+            (identifier)))
+        (type_definition_item
+          (identifier)
+          (list_type
+            (identifier)))
+        (type_definition_item
+          (identifier)
+          (composed_type
+            (identifier)
+            (identifier)
+            (identifier)
+            (identifier)))))
