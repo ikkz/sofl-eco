@@ -1,2 +1,3 @@
 packages:
   - tree-sitter-sofl
+  - sofl-editor
