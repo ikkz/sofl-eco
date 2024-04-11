@@ -1,8 +1,23 @@
 [
   {
+    "type": "bool",
+    "named": true,
+    "fields": {}
+  },
+  {
     "type": "composite_type",
     "named": true,
     "fields": {
+      "field": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": ":",
+            "named": false
+          }
+        ]
+      },
       "field_type": {
         "multiple": true,
         "required": false,
@@ -21,6 +36,10 @@
           },
           {
             "type": "list_type",
+            "named": true
+          },
+          {
+            "type": "map_type",
             "named": true
           },
           {
@@ -76,6 +95,45 @@
     }
   },
   {
+    "type": "ext_item",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "composite_type",
+          "named": true
+        },
+        {
+          "type": "enumeration_type",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "list_type",
+          "named": true
+        },
+        {
+          "type": "map_type",
+          "named": true
+        },
+        {
+          "type": "primitive_type",
+          "named": true
+        },
+        {
+          "type": "set_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "list_type",
     "named": true,
     "fields": {},
@@ -100,6 +158,10 @@
           "named": true
         },
         {
+          "type": "map_type",
+          "named": true
+        },
+        {
           "type": "primitive_type",
           "named": true
         },
@@ -111,12 +173,97 @@
     }
   },
   {
+    "type": "map_type",
+    "named": true,
+    "fields": {
+      "key": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "composite_type",
+            "named": true
+          },
+          {
+            "type": "enumeration_type",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "list_type",
+            "named": true
+          },
+          {
+            "type": "map_type",
+            "named": true
+          },
+          {
+            "type": "primitive_type",
+            "named": true
+          },
+          {
+            "type": "set_type",
+            "named": true
+          }
+        ]
+      },
+      "value": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "composite_type",
+            "named": true
+          },
+          {
+            "type": "enumeration_type",
+            "named": true
+          },
+          {
+            "type": "identifier",
+            "named": true
+          },
+          {
+            "type": "list_type",
+            "named": true
+          },
+          {
+            "type": "map_type",
+            "named": true
+          },
+          {
+            "type": "primitive_type",
+            "named": true
+          },
+          {
+            "type": "set_type",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "module_definition",
     "named": true,
-    "fields": {},
+    "fields": {
+      "module_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      }
+    },
     "children": {
-      "multiple": true,
-      "required": true,
+      "multiple": false,
+      "required": false,
       "types": [
         {
           "type": "identifier",
@@ -126,9 +273,129 @@
     }
   },
   {
+    "type": "parameter_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "composite_type",
+          "named": true
+        },
+        {
+          "type": "enumeration_type",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "list_type",
+          "named": true
+        },
+        {
+          "type": "map_type",
+          "named": true
+        },
+        {
+          "type": "parameter_list",
+          "named": true
+        },
+        {
+          "type": "primitive_type",
+          "named": true
+        },
+        {
+          "type": "set_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "primitive_type",
     "named": true,
     "fields": {}
+  },
+  {
+    "type": "process_body",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "bool",
+          "named": true
+        },
+        {
+          "type": "char",
+          "named": true
+        },
+        {
+          "type": "ext_item",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "int",
+          "named": true
+        },
+        {
+          "type": "real",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "process_definition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "process_definition_item",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "process_definition_item",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "parameter_list",
+          "named": true
+        },
+        {
+          "type": "process_body",
+          "named": true
+        }
+      ]
+    }
   },
   {
     "type": "set_type",
@@ -155,6 +422,10 @@
           "named": true
         },
         {
+          "type": "map_type",
+          "named": true
+        },
+        {
           "type": "primitive_type",
           "named": true
         },
@@ -178,7 +449,15 @@
           "named": true
         },
         {
+          "type": "process_definition",
+          "named": true
+        },
+        {
           "type": "type_definition",
+          "named": true
+        },
+        {
+          "type": "variable_definition",
           "named": true
         }
       ]
@@ -221,6 +500,64 @@
         },
         {
           "type": "list_type",
+          "named": true
+        },
+        {
+          "type": "map_type",
+          "named": true
+        },
+        {
+          "type": "primitive_type",
+          "named": true
+        },
+        {
+          "type": "set_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "variable_definition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "variable_definition_item",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "variable_definition_item",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "composite_type",
+          "named": true
+        },
+        {
+          "type": "enumeration_type",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "list_type",
+          "named": true
+        },
+        {
+          "type": "map_type",
           "named": true
         },
         {
@@ -287,6 +624,14 @@
     "named": false
   },
   {
+    "type": "end_process",
+    "named": false
+  },
+  {
+    "type": "ext",
+    "named": false
+  },
+  {
     "type": "false",
     "named": false
   },
@@ -327,12 +672,28 @@
     "named": false
   },
   {
-    "type": "real",
+    "type": "post",
+    "named": false
+  },
+  {
+    "type": "pre",
+    "named": false
+  },
+  {
+    "type": "process",
+    "named": false
+  },
+  {
+    "type": "rd",
     "named": false
   },
   {
     "type": "real",
     "named": true
+  },
+  {
+    "type": "real",
+    "named": false
   },
   {
     "type": "set",
@@ -359,7 +720,19 @@
     "named": false
   },
   {
+    "type": "var",
+    "named": false
+  },
+  {
+    "type": "wr",
+    "named": false
+  },
+  {
     "type": "{",
+    "named": false
+  },
+  {
+    "type": "|",
     "named": false
   },
   {

@@ -13,35 +13,74 @@ type
       name: TB;
       props: TD;
     end;
+
+var
+    a: TA;
+    b: set of TA;
+    c: TC;
+    d: list of TB;
+    e: TE;
+    f: {<A>, <B>, <C>};
 ---
-  (source_file
-      (module_definition
-        (identifier))
-      (type_definition
-        (type_definition_item
-          (identifier)
-          (primitive_type))
-        (type_definition_item
-          (identifier)
-          (primitive_type))
-        (type_definition_item
-          (identifier)
-          (enumeration_type
-            (identifier)
-            (identifier)
-            (identifier)))
-        (type_definition_item
-          (identifier)
-          (set_type
-            (identifier)))
-        (type_definition_item
-          (identifier)
-          (list_type
-            (identifier)))
-        (type_definition_item
-          (identifier)
-          (composed_type
-            (identifier)
-            (identifier)
-            (identifier)
-            (identifier)))))
+
+(source_file
+  (module_definition
+    (identifier))
+  (type_definition
+    (type_definition_item
+      (identifier)
+      (primitive_type))
+    (type_definition_item
+      (identifier)
+      (primitive_type))
+    (type_definition_item
+      (identifier)
+      (enumeration_type
+        (enumeration_value
+          (identifier))
+        (enumeration_value
+          (identifier))
+        (enumeration_value
+          (identifier))))
+    (type_definition_item
+      (identifier)
+      (set_type
+        (identifier)))
+    (type_definition_item
+      (identifier)
+      (list_type
+        (identifier)))
+    (type_definition_item
+      (identifier)
+      (composite_type
+        (identifier)
+        (identifier)
+        (identifier)
+        (identifier))))
+  (variable_definition
+    (variable_definition_item
+      (identifier)
+      (identifier))
+    (variable_definition_item
+      (identifier)
+      (set_type
+        (identifier)))
+    (variable_definition_item
+      (identifier)
+      (identifier))
+    (variable_definition_item
+      (identifier)
+      (list_type
+        (identifier)))
+    (variable_definition_item
+      (identifier)
+      (identifier))
+    (variable_definition_item
+      (identifier)
+      (enumeration_type
+        (enumeration_value
+          (identifier))
+        (enumeration_value
+          (identifier))
+        (enumeration_value
+          (identifier))))))

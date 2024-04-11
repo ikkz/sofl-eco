@@ -11,49 +11,64 @@ module.exports = grammar({
       seq(
         $.module_definition,
         optional($.type_definition),
-        // optional($.variable_definition),
-        // optional($.process_definition),
+        optional($.variable_definition),
+        optional($.process_definition),
       ),
 
     module_definition: ($) =>
       seq(
         "module",
-        $.identifier,
+        field("module_name", $.identifier),
         optional(seq("/", $.identifier)),
         $._semicolon,
       ),
 
     type_definition: ($) => seq("type", repeat1($.type_definition_item)),
-
     type_definition_item: ($) => seq($.identifier, "=", $._type, $._semicolon),
 
-    // variable_definition: ($) => seq(),
+    variable_definition: ($) => seq("var", repeat1($.variable_definition_item)),
+    variable_definition_item: ($) =>
+      seq($.identifier, ":", $._type, $._semicolon),
 
-    // process_definition: ($) =>
-    //   seq("func", $.identifier, $.parameter_list, $._type, $.block),
+    process_definition: ($) => repeat1($.process_definition_item),
+    process_definition_item: ($) =>
+      seq(
+        "process",
+        $.identifier,
+        "(",
+        $.parameter_list,
+        ")",
+        $.parameter_list,
+        $.process_body,
+        "end_process",
+        $._semicolon,
+      ),
 
-    // parameter_list: ($) =>
-    //   seq(
-    //     "(",
-    //     // TODO: parameters
-    //     ")",
-    //   ),
+    parameter_list: ($) =>
+      choice(
+        seq($.identifier, repeat(seq(",", $.identifier)), ":", $._type),
+        prec.left(seq($.parameter_list, "|", $.parameter_list)),
+      ),
+
+    process_body: ($) =>
+      seq(
+        optional(seq("ext", repeat1($.ext_item))),
+        seq("pre", $._expression),
+        seq("post", $._expression),
+      ),
+
+    ext_item: ($) => seq(choice("wr", "rd"), $.identifier, ":", $._type),
 
     _type: ($) =>
       choice(
+        $.identifier,
         $.primitive_type,
         $.enumeration_type,
         $.set_type,
         $.list_type,
-        $.identifier,
+        $.map_type,
         $.composite_type,
       ),
-
-    int: ($) => /-?\d+/,
-    real: ($) => /-?\d+\.\d+/,
-    string: ($) => /"[^"]*"/,
-    char: ($) => /'[^']'/,
-    bool: ($) => choice("true", "false"),
 
     primitive_type: ($) =>
       choice("nat", "nat0", "real", "int", "bool", "char", "string"),
@@ -62,21 +77,25 @@ module.exports = grammar({
     enumeration_value: ($) => seq("<", $.identifier, ">"),
     set_type: ($) => seq("set", "of", $._type),
     list_type: ($) => seq("list", "of", $._type),
+    map_type: ($) =>
+      seq("map", field("key", $._type), "to", field("value", $._type)),
     composite_type: ($) =>
       seq(
         "composed",
         "of",
         repeat(
-          seq(
-            field("filed_name", $.identifier),
-            ":",
-            field("field_type", $._type),
-            $._semicolon,
+          field(
+            "field",
+            seq(
+              field("filed_name", $.identifier),
+              ":",
+              field("field_type", $._type),
+              $._semicolon,
+            ),
           ),
         ),
         "end",
       ),
-    map_type: ($) => seq("map", $.identifier, "to", $._type),
 
     _expression: ($) =>
       choice(
@@ -85,9 +104,14 @@ module.exports = grammar({
         $.real,
         $.string,
         $.char,
+        $.bool,
         seq("(", $._expression, ")"),
       ),
-
+    int: ($) => /-?\d+/,
+    real: ($) => /-?\d+\.\d+/,
+    string: ($) => /"[^"]*"/,
+    char: ($) => /'[^']'/,
+    bool: ($) => choice("true", "false"),
     identifier: ($) => /[_a-zA-Z][_a-zA-Z0-9]*/,
 
     _semicolon: ($) => ";",

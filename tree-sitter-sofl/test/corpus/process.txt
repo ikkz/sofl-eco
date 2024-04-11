@@ -1,0 +1,42 @@
+==================
+Process
+==================
+
+module ATM;
+
+process hello(student: Student) grades: map nat to Grade
+ext
+  rd students: map string to Student
+  rd teachers: map string to Teacher
+pre true
+post false
+end_process;
+---
+
+(source_file
+  (module_definition
+    (identifier))
+  (process_definition
+    (process_definition_item
+      (identifier)
+      (parameter_list
+        (identifier)
+        (identifier))
+      (parameter_list
+        (identifier)
+        (map_type
+          (primitive_type)
+          (identifier)))
+      (process_body
+        (ext_item
+          (identifier)
+          (map_type
+            (primitive_type)
+            (identifier)))
+        (ext_item
+          (identifier)
+          (map_type
+            (primitive_type)
+            (identifier)))
+        (bool)
+        (bool)))))
