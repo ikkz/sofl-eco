@@ -20,7 +20,7 @@
           "named": true
         },
         {
-          "type": "identifier",
+          "type": "function_expression",
           "named": true
         },
         {
@@ -36,7 +36,110 @@
           "named": true
         },
         {
+          "type": "modify_expression",
+          "named": true
+        },
+        {
+          "type": "quantified_expression",
+          "named": true
+        },
+        {
           "type": "real",
+          "named": true
+        },
+        {
+          "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "binding_list",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "bool",
+          "named": true
+        },
+        {
+          "type": "char",
+          "named": true
+        },
+        {
+          "type": "composite_type",
+          "named": true
+        },
+        {
+          "type": "enumeration_type",
+          "named": true
+        },
+        {
+          "type": "function_expression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "int",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "list_type",
+          "named": true
+        },
+        {
+          "type": "map_expression",
+          "named": true
+        },
+        {
+          "type": "map_type",
+          "named": true
+        },
+        {
+          "type": "modify_expression",
+          "named": true
+        },
+        {
+          "type": "primitive_type",
+          "named": true
+        },
+        {
+          "type": "quantified_expression",
+          "named": true
+        },
+        {
+          "type": "real",
+          "named": true
+        },
+        {
+          "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "set_type",
           "named": true
         },
         {
@@ -166,7 +269,7 @@
           "named": true
         },
         {
-          "type": "identifier",
+          "type": "function_expression",
           "named": true
         },
         {
@@ -182,7 +285,19 @@
           "named": true
         },
         {
+          "type": "modify_expression",
+          "named": true
+        },
+        {
+          "type": "quantified_expression",
+          "named": true
+        },
+        {
           "type": "real",
+          "named": true
+        },
+        {
+          "type": "reference_expression",
           "named": true
         },
         {
@@ -230,6 +345,25 @@
         },
         {
           "type": "set_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "function_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "expression_list",
+          "named": true
+        },
+        {
+          "type": "identifier",
           "named": true
         }
       ]
@@ -325,7 +459,7 @@
           "named": true
         },
         {
-          "type": "identifier",
+          "type": "function_expression",
           "named": true
         },
         {
@@ -341,7 +475,19 @@
           "named": true
         },
         {
+          "type": "modify_expression",
+          "named": true
+        },
+        {
+          "type": "quantified_expression",
+          "named": true
+        },
+        {
           "type": "real",
+          "named": true
+        },
+        {
+          "type": "reference_expression",
           "named": true
         },
         {
@@ -427,6 +573,73 @@
           }
         ]
       }
+    }
+  },
+  {
+    "type": "modify_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "bool",
+          "named": true
+        },
+        {
+          "type": "char",
+          "named": true
+        },
+        {
+          "type": "function_expression",
+          "named": true
+        },
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "int",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "map_expression",
+          "named": true
+        },
+        {
+          "type": "modify_expression",
+          "named": true
+        },
+        {
+          "type": "quantified_expression",
+          "named": true
+        },
+        {
+          "type": "real",
+          "named": true
+        },
+        {
+          "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        }
+      ]
     }
   },
   {
@@ -539,7 +752,7 @@
           "named": true
         },
         {
-          "type": "identifier",
+          "type": "function_expression",
           "named": true
         },
         {
@@ -555,7 +768,19 @@
           "named": true
         },
         {
+          "type": "modify_expression",
+          "named": true
+        },
+        {
+          "type": "quantified_expression",
+          "named": true
+        },
+        {
           "type": "real",
+          "named": true
+        },
+        {
+          "type": "reference_expression",
           "named": true
         },
         {
@@ -602,6 +827,92 @@
         },
         {
           "type": "process_body",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "quantified_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "binary_expression",
+          "named": true
+        },
+        {
+          "type": "binding_list",
+          "named": true
+        },
+        {
+          "type": "bool",
+          "named": true
+        },
+        {
+          "type": "char",
+          "named": true
+        },
+        {
+          "type": "function_expression",
+          "named": true
+        },
+        {
+          "type": "int",
+          "named": true
+        },
+        {
+          "type": "list_expression",
+          "named": true
+        },
+        {
+          "type": "map_expression",
+          "named": true
+        },
+        {
+          "type": "modify_expression",
+          "named": true
+        },
+        {
+          "type": "quantified_expression",
+          "named": true
+        },
+        {
+          "type": "real",
+          "named": true
+        },
+        {
+          "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "unary_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "reference_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "identifier",
+          "named": true
+        },
+        {
+          "type": "reference_expression",
           "named": true
         }
       ]
@@ -748,7 +1059,7 @@
           "named": true
         },
         {
-          "type": "identifier",
+          "type": "function_expression",
           "named": true
         },
         {
@@ -764,7 +1075,19 @@
           "named": true
         },
         {
+          "type": "modify_expression",
+          "named": true
+        },
+        {
+          "type": "quantified_expression",
+          "named": true
+        },
+        {
           "type": "real",
+          "named": true
+        },
+        {
+          "type": "reference_expression",
           "named": true
         },
         {
@@ -861,6 +1184,10 @@
     "named": false
   },
   {
+    "type": ".",
+    "named": false
+  },
+  {
     "type": "/",
     "named": false
   },
@@ -901,6 +1228,14 @@
     "named": false
   },
   {
+    "type": "[",
+    "named": false
+  },
+  {
+    "type": "]",
+    "named": false
+  },
+  {
     "type": "and",
     "named": false
   },
@@ -933,11 +1268,19 @@
     "named": false
   },
   {
+    "type": "exists",
+    "named": false
+  },
+  {
     "type": "ext",
     "named": false
   },
   {
     "type": "false",
+    "named": false
+  },
+  {
+    "type": "forall",
     "named": false
   },
   {
@@ -950,11 +1293,11 @@
   },
   {
     "type": "int",
-    "named": true
+    "named": false
   },
   {
     "type": "int",
-    "named": false
+    "named": true
   },
   {
     "type": "list",
@@ -966,6 +1309,10 @@
   },
   {
     "type": "mod",
+    "named": false
+  },
+  {
+    "type": "modify",
     "named": false
   },
   {
@@ -1030,11 +1377,11 @@
   },
   {
     "type": "string",
-    "named": true
+    "named": false
   },
   {
     "type": "string",
-    "named": false
+    "named": true
   },
   {
     "type": "to",
@@ -1061,7 +1408,15 @@
     "named": false
   },
   {
+    "type": "|",
+    "named": false
+  },
+  {
     "type": "}",
+    "named": false
+  },
+  {
+    "type": "~",
     "named": false
   }
 ]

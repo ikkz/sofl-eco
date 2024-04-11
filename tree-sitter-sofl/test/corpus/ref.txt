@@ -1,5 +1,5 @@
 ==================
-Exp
+Ref
 ==================
 
 module ATM;
@@ -8,8 +8,8 @@ process hello(student: Student) grades: map nat to Grade
 ext
   rd students: map string to Student
   rd teachers: map string to Teacher
-pre student inset students
-post 1 inset { -> }
+pre student.a.b.c.d
+post false
 end_process;
 ---
 
@@ -40,11 +40,14 @@ end_process;
           (map_type
             (primitive_type)
             (identifier)))
-        (binary_expression
+        (reference_expression
           (reference_expression
+            (reference_expression
+              (reference_expression
+                (reference_expression
+                  (identifier))
+                (identifier))
+              (identifier))
             (identifier))
-          (reference_expression
-            (identifier)))
-        (binary_expression
-          (int)
-          (map_expression))))))
+          (identifier))
+        (bool)))))

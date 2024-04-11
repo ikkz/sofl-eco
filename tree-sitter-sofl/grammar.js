@@ -43,8 +43,7 @@ module.exports = grammar({
         $._semicolon,
       ),
 
-    parameter_list: ($) =>
-      seq($.parameter_item, repeat(seq(",", $.parameter_item))),
+    parameter_list: ($) => sep1($.parameter_item, "|"),
     parameter_item: ($) =>
       seq($.identifier, repeat(seq(",", $.identifier)), ":", $._type),
 
@@ -58,20 +57,22 @@ module.exports = grammar({
     ext_item: ($) => seq(choice("wr", "rd"), $.identifier, ":", $._type),
 
     _type: ($) =>
-      choice(
-        $.identifier,
-        $.primitive_type,
-        $.enumeration_type,
-        $.set_type,
-        $.list_type,
-        $.map_type,
-        $.composite_type,
+      prec.left(
+        1,
+        choice(
+          $.identifier,
+          $.primitive_type,
+          $.enumeration_type,
+          $.set_type,
+          $.list_type,
+          $.map_type,
+          $.composite_type,
+        ),
       ),
 
     primitive_type: ($) =>
       choice("nat", "nat0", "real", "int", "bool", "char", "string"),
-    enumeration_type: ($) =>
-      seq("{", $.enumeration_value, repeat(seq(",", $.enumeration_value)), "}"),
+    enumeration_type: ($) => seq("{", commaSep1($.enumeration_value), "}"),
     enumeration_value: ($) => seq("<", $.identifier, ">"),
     set_type: ($) => seq("set", "of", $._type),
     list_type: ($) => seq("list", "of", $._type),
@@ -97,14 +98,17 @@ module.exports = grammar({
 
     _expression: ($) =>
       choice(
-        $.identifier,
         $._constant_expression,
         $.unary_expression,
         $.binary_expression,
+        $.reference_expression,
+        $.modify_expression,
+        $.function_expression,
+        $.quantified_expression,
         seq("(", $._expression, ")"),
       ),
 
-    expression_list: ($) => seq($._expression, repeat(seq(",", $._expression))),
+    expression_list: ($) => commaSep1($._expression),
     _constant_expression: ($) =>
       choice(
         $.int,
@@ -115,6 +119,8 @@ module.exports = grammar({
         $.list_expression,
         $.map_expression,
       ),
+    reference_expression: ($) =>
+      choice($.identifier, seq($.reference_expression, ".", $.identifier)),
     list_expression: ($) => seq("{", optional($.expression_list), "}"),
     map_expression: ($) =>
       seq(
@@ -123,11 +129,12 @@ module.exports = grammar({
         "}",
       ),
     map_item: ($) => seq($._expression, "->", $._expression),
-    unary_expression: ($) => prec(3, seq(choice("-", "not"), $._expression)),
+    unary_expression: ($) =>
+      prec(10, seq(choice("-", "not", "~"), $._expression)),
     binary_expression: ($) =>
       choice(
         prec.left(
-          2,
+          9,
           seq(
             $._expression,
             choice(
@@ -145,16 +152,32 @@ module.exports = grammar({
               "inset",
               "notinset",
               "and",
-              "or",
-              "=>",
-              "<=>",
             ),
             $._expression,
           ),
         ),
-        prec.left(1, seq($._expression, choice("+", "-"), $._expression)),
+        prec.left(8, seq($._expression, choice("+", "-", "or"), $._expression)),
+        prec.left(7, seq($._expression, choice("=>", "<=>"), $._expression)),
       ),
 
+    modify_expression: ($) =>
+      seq(
+        "modify",
+        "(",
+        $.identifier,
+        ",",
+        commaSep1(seq($.identifier, "->", $._expression)),
+        ")",
+      ),
+    function_expression: ($) =>
+      seq($.identifier, "(", optional($.expression_list), ")"),
+
+    quantified_expression: ($) =>
+      seq(choice("forall", "exists"), "[", $.binding_list, "]", $._expression),
+    binding_list: ($) =>
+      commaSep1(
+        seq(commaSep1($.identifier), ":", choice($._type, $._expression)),
+      ),
     int: ($) => /-?\d+/,
     real: ($) => /-?\d+\.\d+/,
     string: ($) => /"[^"]*"/,
@@ -165,3 +188,15 @@ module.exports = grammar({
     _semicolon: ($) => ";",
   },
 });
+
+function sep1(rule, separator) {
+  return seq(rule, repeat(seq(separator, rule)));
+}
+
+function commaSep1(rule) {
+  return seq(rule, repeat(seq(",", rule)));
+}
+
+function commaSep(rule) {
+  return optional(commaSep1(rule));
+}

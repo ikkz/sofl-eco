@@ -1,0 +1,129 @@
+==================
+Function
+==================
+
+module ATM;
+process Withdraw(amount: real | account1: Account)
+e_msg: string | cash: real
+ext wr account_file: set of Account
+pre account1 inset account_file and account1.balance >= amount
+post (exists[x: account_file] x = account1 and x.balance >= amount and cash = amount)
+      and account_file = union(diff(~account_file, {account1}), {modify(account1, balance -> account1.balance - amount)})
+      or not exists[x: account_file] x = account1 and x.balance >= amount and e_msg = "The amount is too big"
+end_process;
+---
+
+(source_file
+  (module_definition
+    (identifier))
+  (process_definition
+    (process_definition_item
+      (identifier)
+      (parameter_list
+        (parameter_item
+          (identifier)
+          (primitive_type))
+        (parameter_item
+          (identifier)
+          (identifier)))
+      (parameter_list
+        (parameter_item
+          (identifier)
+          (primitive_type))
+        (parameter_item
+          (identifier)
+          (primitive_type)))
+      (process_body
+        (ext_item
+          (identifier)
+          (set_type
+            (identifier)))
+        (binary_expression
+          (binary_expression
+            (binary_expression
+              (reference_expression
+                (identifier))
+              (reference_expression
+                (identifier)))
+            (reference_expression
+              (reference_expression
+                (identifier))
+              (identifier)))
+          (reference_expression
+            (identifier)))
+        (binary_expression
+          (binary_expression
+            (binary_expression
+              (quantified_expression
+                (binding_list
+                  (identifier)
+                  (identifier))
+                (binary_expression
+                  (binary_expression
+                    (binary_expression
+                      (binary_expression
+                        (binary_expression
+                          (reference_expression
+                            (identifier))
+                          (reference_expression
+                            (identifier)))
+                        (reference_expression
+                          (reference_expression
+                            (identifier))
+                          (identifier)))
+                      (reference_expression
+                        (identifier)))
+                    (reference_expression
+                      (identifier)))
+                  (reference_expression
+                    (identifier))))
+              (reference_expression
+                (identifier)))
+            (function_expression
+              (identifier)
+              (expression_list
+                (function_expression
+                  (identifier)
+                  (expression_list
+                    (unary_expression
+                      (reference_expression
+                        (identifier)))
+                    (list_expression
+                      (expression_list
+                        (reference_expression
+                          (identifier))))))
+                (list_expression
+                  (expression_list
+                    (modify_expression
+                      (identifier)
+                      (identifier)
+                      (binary_expression
+                        (reference_expression
+                          (reference_expression
+                            (identifier))
+                          (identifier))
+                        (reference_expression
+                          (identifier)))))))))
+          (unary_expression
+            (quantified_expression
+              (binding_list
+                (identifier)
+                (identifier))
+              (binary_expression
+                (binary_expression
+                  (binary_expression
+                    (binary_expression
+                      (binary_expression
+                        (reference_expression
+                          (identifier))
+                        (reference_expression
+                          (identifier)))
+                      (reference_expression
+                        (reference_expression
+                          (identifier))
+                        (identifier)))
+                    (reference_expression
+                      (identifier)))
+                  (reference_expression
+                    (identifier)))
+                (string)))))))))

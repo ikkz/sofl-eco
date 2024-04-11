@@ -4,7 +4,7 @@ Process
 
 module ATM;
 
-process hello(student: Student) grades: map nat to Grade
+process hello(student: Student | a: A) grades: map nat to Grade
 ext
   rd students: map string to Student
   rd teachers: map string to Teacher
@@ -20,6 +20,9 @@ end_process;
     (process_definition_item
       (identifier)
       (parameter_list
+        (parameter_item
+          (identifier)
+          (identifier))
         (parameter_item
           (identifier)
           (identifier)))
