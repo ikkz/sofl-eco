@@ -5,7 +5,6 @@ module.exports = grammar({
   name: "sofl",
 
   word: ($) => $.identifier,
-
   rules: {
     source_file: ($) =>
       seq(
@@ -36,19 +35,18 @@ module.exports = grammar({
         "process",
         $.identifier,
         "(",
-        $.parameter_list,
+        optional($.parameter_list),
         ")",
-        $.parameter_list,
+        optional($.parameter_list),
         $.process_body,
         "end_process",
         $._semicolon,
       ),
 
     parameter_list: ($) =>
-      choice(
-        seq($.identifier, repeat(seq(",", $.identifier)), ":", $._type),
-        prec.left(seq($.parameter_list, "|", $.parameter_list)),
-      ),
+      seq($.parameter_item, repeat(seq(",", $.parameter_item))),
+    parameter_item: ($) =>
+      seq($.identifier, repeat(seq(",", $.identifier)), ":", $._type),
 
     process_body: ($) =>
       seq(
@@ -100,13 +98,63 @@ module.exports = grammar({
     _expression: ($) =>
       choice(
         $.identifier,
+        $._constant_expression,
+        $.unary_expression,
+        $.binary_expression,
+        seq("(", $._expression, ")"),
+      ),
+
+    expression_list: ($) => seq($._expression, repeat(seq(",", $._expression))),
+    _constant_expression: ($) =>
+      choice(
         $.int,
         $.real,
         $.string,
         $.char,
         $.bool,
-        seq("(", $._expression, ")"),
+        $.list_expression,
+        $.map_expression,
       ),
+    list_expression: ($) => seq("{", optional($.expression_list), "}"),
+    map_expression: ($) =>
+      seq(
+        "{",
+        choice("->", seq($.map_item, repeat(seq(",", $.map_item)))),
+        "}",
+      ),
+    map_item: ($) => seq($._expression, "->", $._expression),
+    unary_expression: ($) => prec(3, seq(choice("-", "not"), $._expression)),
+    binary_expression: ($) =>
+      choice(
+        prec.left(
+          2,
+          seq(
+            $._expression,
+            choice(
+              "*",
+              "/",
+              "div",
+              "rem",
+              "mod",
+              "=",
+              "<>",
+              "<",
+              "<=",
+              ">",
+              ">=",
+              "inset",
+              "notinset",
+              "and",
+              "or",
+              "=>",
+              "<=>",
+            ),
+            $._expression,
+          ),
+        ),
+        prec.left(1, seq($._expression, choice("+", "-"), $._expression)),
+      ),
+
     int: ($) => /-?\d+/,
     real: ($) => /-?\d+\.\d+/,
     string: ($) => /"[^"]*"/,
