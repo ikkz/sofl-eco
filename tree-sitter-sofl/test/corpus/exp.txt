@@ -4,12 +4,9 @@ Exp
 
 module ATM;
 
-process hello(student: Student) grades: map nat to Grade
-ext
-  rd students: map string to Student
-  rd teachers: map string to Teacher
-pre student inset students
-post 1 inset { -> }
+process hello()
+pre { 1 -> 2 ,2 -> 3, 3 -> 4 }
+post true
 end_process;
 ---
 
@@ -19,32 +16,15 @@ end_process;
   (process_definition
     (process_definition_item
       (identifier)
-      (parameter_list
-        (parameter_item
-          (identifier)
-          (identifier)))
-      (parameter_list
-        (parameter_item
-          (identifier)
-          (map_type
-            (primitive_type)
-            (identifier))))
       (process_body
-        (ext_item
-          (identifier)
-          (map_type
-            (primitive_type)
-            (identifier)))
-        (ext_item
-          (identifier)
-          (map_type
-            (primitive_type)
-            (identifier)))
-        (binary_expression
-          (reference_expression
-            (identifier))
-          (reference_expression
-            (identifier)))
-        (binary_expression
-          (int)
-          (map_expression))))))
+        (map_expression
+          (map_item
+            (int)
+            (int))
+          (map_item
+            (int)
+            (int))
+          (map_item
+            (int)
+            (int)))
+        (bool)))))

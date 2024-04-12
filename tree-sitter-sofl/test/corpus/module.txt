@@ -1,5 +1,5 @@
 ==================
-Moudle
+Module
 ==================
 
 module ATM;
@@ -12,6 +12,8 @@ type
     TF = composed of
       name: TB;
       props: TD;
+      props1: int;
+      props2: string;
     end;
 
 var
@@ -45,36 +47,49 @@ var
     (type_definition_item
       (identifier)
       (set_type
-        (identifier)))
+        (type_identifier
+          (identifier))))
     (type_definition_item
       (identifier)
       (list_type
-        (identifier)))
+        (type_identifier
+          (identifier))))
     (type_definition_item
       (identifier)
       (composite_type
         (identifier)
+        (type_identifier
+          (identifier))
         (identifier)
+        (type_identifier
+          (identifier))
         (identifier)
-        (identifier))))
+        (primitive_type)
+        (identifier)
+        (primitive_type))))
   (variable_definition
     (variable_definition_item
       (identifier)
-      (identifier))
+      (type_identifier
+        (identifier)))
     (variable_definition_item
       (identifier)
       (set_type
-        (identifier)))
+        (type_identifier
+          (identifier))))
     (variable_definition_item
       (identifier)
-      (identifier))
+      (type_identifier
+        (identifier)))
     (variable_definition_item
       (identifier)
       (list_type
-        (identifier)))
+        (type_identifier
+          (identifier))))
     (variable_definition_item
       (identifier)
-      (identifier))
+      (type_identifier
+        (identifier)))
     (variable_definition_item
       (identifier)
       (enumeration_type

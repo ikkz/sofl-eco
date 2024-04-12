@@ -45,7 +45,7 @@ module.exports = grammar({
 
     parameter_list: ($) => sep1($.parameter_item, "|"),
     parameter_item: ($) =>
-      seq($.identifier, repeat(seq(",", $.identifier)), ":", $._type),
+      seq($.identifier, repeat(seq(",", $.identifier)), ":", choice($._type, $._expression)),
 
     process_body: ($) =>
       seq(
@@ -60,7 +60,7 @@ module.exports = grammar({
       prec.left(
         1,
         choice(
-          $.identifier,
+          $.type_identifier,
           $.primitive_type,
           $.enumeration_type,
           $.set_type,
@@ -69,6 +69,8 @@ module.exports = grammar({
           $.composite_type,
         ),
       ),
+
+    type_identifier: ($) => prec(1, $.identifier),
 
     primitive_type: ($) =>
       choice("nat", "nat0", "real", "int", "bool", "char", "string"),
@@ -121,50 +123,32 @@ module.exports = grammar({
       ),
     reference_expression: ($) =>
       choice($.identifier, seq($.reference_expression, ".", $.identifier)),
-    list_expression: ($) => seq("{", optional($.expression_list), "}"),
+    list_expression: ($) => seq("{", optional(field("items", $.expression_list)), "}"),
     map_expression: ($) =>
       seq(
         "{",
         choice("->", seq($.map_item, repeat(seq(",", $.map_item)))),
         "}",
       ),
-    map_item: ($) => seq($._expression, "->", $._expression),
+    map_item: ($) => seq(field("key", $._expression), "->", field("value", $._expression)),
     unary_expression: ($) =>
-      prec(10, seq(choice("-", "not", "~"), $._expression)),
+      prec(11, seq(choice("-", "not", "~"), $._expression)),
     binary_expression: ($) =>
       choice(
-        prec.left(
-          9,
-          seq(
-            $._expression,
-            choice(
-              "*",
-              "/",
-              "div",
-              "rem",
-              "mod",
-              "=",
-              "<>",
-              "<",
-              "<=",
-              ">",
-              ">=",
-              "inset",
-              "notinset",
-              "and",
-            ),
-            $._expression,
-          ),
-        ),
-        prec.left(8, seq($._expression, choice("+", "-", "or"), $._expression)),
-        prec.left(7, seq($._expression, choice("=>", "<=>"), $._expression)),
+
+        binary_operators(10, ["=", "<>", "<", "<=", ">", ">=", "inset", "notinset"], $._expression),
+        binary_operators(9, ["*", "/", "div", "rem", "mod",], $._expression),
+        binary_operators(8, ["+", "-"], $._expression),
+        binary_operators(7, ["and"], $._expression),
+        binary_operators(6, ["or"], $._expression),
+        binary_operators(5, ["=>", "<=>"], $._expression)
       ),
 
     modify_expression: ($) =>
       seq(
         "modify",
         "(",
-        $.identifier,
+        $.reference_expression,
         ",",
         commaSep1(seq($.identifier, "->", $._expression)),
         ")",
@@ -174,10 +158,7 @@ module.exports = grammar({
 
     quantified_expression: ($) =>
       seq(choice("forall", "exists"), "[", $.binding_list, "]", $._expression),
-    binding_list: ($) =>
-      commaSep1(
-        seq(commaSep1($.identifier), ":", choice($._type, $._expression)),
-      ),
+    binding_list: ($) => commaSep1($.parameter_item),
     int: ($) => /-?\d+/,
     real: ($) => /-?\d+\.\d+/,
     string: ($) => /"[^"]*"/,
@@ -199,4 +180,8 @@ function commaSep1(rule) {
 
 function commaSep(rule) {
   return optional(commaSep1(rule));
+}
+
+function binary_operators(_prec, operators, exp) {
+  return prec.left(_prec, seq(exp, choice(...operators), exp));
 }

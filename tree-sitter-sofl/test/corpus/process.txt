@@ -22,26 +22,31 @@ end_process;
       (parameter_list
         (parameter_item
           (identifier)
-          (identifier))
+          (type_identifier
+            (identifier)))
         (parameter_item
           (identifier)
-          (identifier)))
+          (type_identifier
+            (identifier))))
       (parameter_list
         (parameter_item
           (identifier)
           (map_type
             (primitive_type)
-            (identifier))))
+            (type_identifier
+              (identifier)))))
       (process_body
         (ext_item
           (identifier)
           (map_type
             (primitive_type)
-            (identifier)))
+            (type_identifier
+              (identifier))))
         (ext_item
           (identifier)
           (map_type
             (primitive_type)
-            (identifier)))
+            (type_identifier
+              (identifier))))
         (bool)
         (bool)))))
