@@ -304,12 +304,10 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                         level: diagnostic::Level::Warning,
                         range: node.range().into(),
                         message: format!(
-                            "操作符 {} 的左类型 {} 和右类型 {} 不匹配 {}-{}",
+                            "操作符 {} 的左类型 {} 和右类型 {} 不匹配",
                             operator.kind(),
                             left_type.to_string(),
                             right_type.to_string(),
-                            left.kind(),
-                            right.kind()
                         ),
                     })
                 }
