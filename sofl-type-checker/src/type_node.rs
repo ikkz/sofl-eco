@@ -2,6 +2,7 @@ use crate::context::Context;
 use crate::diagnostic::Diagnostic;
 use crate::symbol_manager::Symbol;
 use crate::type_manager::LangType;
+use crate::types::TypeDetail;
 use crate::utils::collect_kind;
 use crate::{diagnostic, utils::collect_when};
 use itertools::Itertools;
@@ -21,13 +22,14 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
         type_manager,
         diagnostics,
         source: _,
+        collect_types: collected_types,
     } = ctx.deref_mut();
 
     let node = cursor.node();
     if node.is_error() {
         diagnostics.push(Diagnostic {
             level: diagnostic::Level::Error,
-            range: node.range(),
+            range: node.range().into(),
             message: "Syntax error".to_string(),
         });
         return;
@@ -148,6 +150,12 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             if let (Some(identifier), Some(lang_type)) = (node.child(0), node.child(2)) {
                 let name: String = { identifier.utf8_text(&source_bytes).unwrap().into() };
                 let lang_type = type_manager.node_type(lang_type.id()).unwrap_or_default();
+                collected_types.push(TypeDetail {
+                    range: identifier.range().into(),
+                    source: identifier.utf8_text(&source_bytes).unwrap().to_string(),
+                    type_str: lang_type.to_string(),
+                    type_expanded: lang_type.expanded_type(),
+                });
                 symbol_manager.add_symbol(
                     &node.parent().unwrap().parent().unwrap(),
                     &name,
@@ -160,6 +168,12 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             if let (Some(identifier), Some(lang_type)) = (node.child(0), node.child(2)) {
                 let name: String = { identifier.utf8_text(&source_bytes).unwrap().into() };
                 let lang_type = type_manager.node_type(lang_type.id()).unwrap_or_default();
+                collected_types.push(TypeDetail {
+                    range: identifier.range().into(),
+                    source: identifier.utf8_text(&source_bytes).unwrap().to_string(),
+                    type_str: lang_type.to_string(),
+                    type_expanded: lang_type.expanded_type(),
+                });
                 symbol_manager.add_symbol(
                     &node.parent().unwrap().parent().unwrap(),
                     &name,
@@ -176,6 +190,12 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             if let Some(lang_type) = lang_type {
                 nodes.iter().for_each(|n| {
                     let name: String = n.utf8_text(&source_bytes).unwrap().into();
+                    collected_types.push(TypeDetail {
+                        range: n.range().into(),
+                        source: n.utf8_text(&source_bytes).unwrap().to_string(),
+                        type_str: lang_type.to_string(),
+                        type_expanded: lang_type.expanded_type(),
+                    });
                     symbol_manager.add_symbol(
                         &node.parent().unwrap().parent().unwrap(),
                         &name,
@@ -186,9 +206,15 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             None
         }
         "ext_item" => {
-            if let (Some(name), Some(lang_type)) = (node.child(1), node.child(3)) {
-                let name: String = name.utf8_text(&source_bytes).unwrap().into();
+            if let (Some(name_node), Some(lang_type)) = (node.child(1), node.child(3)) {
+                let name: String = name_node.utf8_text(&source_bytes).unwrap().into();
                 let lang_type = type_manager.node_type(lang_type.id()).unwrap_or_default();
+                collected_types.push(TypeDetail {
+                    range: name_node.range().into(),
+                    source: name_node.utf8_text(&source_bytes).unwrap().to_string(),
+                    type_str: lang_type.to_string(),
+                    type_expanded: lang_type.expanded_type(),
+                });
                 symbol_manager.add_symbol(
                     &node.parent().unwrap().parent().unwrap(),
                     &name,
@@ -197,7 +223,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             } else {
                 diagnostics.push(Diagnostic {
                     level: diagnostic::Level::Error,
-                    range: node.range(),
+                    range: node.range().into(),
                     message: "Invalid external item".to_string(),
                 });
             }
@@ -274,7 +300,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 if left_type.deref() != right_type.deref() {
                     diagnostics.push(Diagnostic {
                         level: diagnostic::Level::Error,
-                        range: node.range(),
+                        range: node.range().into(),
                         message: "Type mismatch".to_string(),
                     })
                 }
@@ -307,7 +333,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                     let field_type = fields.get(&name);
                     if field_type.is_none() {
                         diagnostics.push(Diagnostic {
-                            range: node.range(),
+                            range: node.range().into(),
                             level: diagnostic::Level::Warning,
                             message: format!("Field {} not found", name),
                         });
@@ -364,7 +390,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                             if arg_type.is_none() || !arg_type.unwrap().skip_alias().is_numeric() {
                                 diagnostics.push(Diagnostic {
                                     level: diagnostic::Level::Warning,
-                                    range: arg.range(),
+                                    range: arg.range().into(),
                                     message: "Invalid argument type".to_string(),
                                 });
                             }
@@ -381,7 +407,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                             } else {
                                 diagnostics.push(Diagnostic {
                                     level: diagnostic::Level::Warning,
-                                    range: fn_name.range(),
+                                    range: fn_name.range().into(),
                                     message: "Invalid function type".to_string(),
                                 });
                                 LangType::Unknown.into()
@@ -389,7 +415,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                         } else {
                             diagnostics.push(Diagnostic {
                                 level: diagnostic::Level::Warning,
-                                range: node.range(),
+                                range: node.range().into(),
                                 message: "Function not found".to_string(),
                             });
                             LangType::Unknown.into()
@@ -399,7 +425,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             } else {
                 diagnostics.push(Diagnostic {
                     level: diagnostic::Level::Error,
-                    range: node.range(),
+                    range: node.range().into(),
                     message: "Invalid function expression".to_string(),
                 });
                 LangType::Unknown.into()
@@ -409,11 +435,12 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
         _ => None,
     };
     if let Some(lang_type) = node_type {
-        println!(
-            "{:<30} {:?}",
-            node.utf8_text(&source_bytes).unwrap(),
-            lang_type
-        );
-        type_manager.set_node_type(node.id(), lang_type.into());
+        type_manager.set_node_type(node.id(), lang_type.clone().into());
+        collected_types.push(TypeDetail {
+            range: node.range().into(),
+            source: node.utf8_text(&source_bytes).unwrap().to_string(),
+            type_str: lang_type.to_string(),
+            type_expanded: lang_type.expanded_type(),
+        });
     }
 }

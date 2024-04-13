@@ -11,3 +11,4 @@ tree-sitter = { workspace = true }
 anyhow = "1.0.82"
 thiserror = "1.0.58"
 itertools = "0.12.1"
+serde = { version = "1.0.197", features = ["derive"] }

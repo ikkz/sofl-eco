@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = [ "sofl-type-checker","tree-sitter-sofl"]
+members = ["sofl-type-checker", "tree-sitter-sofl"]
 
 [workspace.dependencies]
 tree-sitter = ">=0.22.2"

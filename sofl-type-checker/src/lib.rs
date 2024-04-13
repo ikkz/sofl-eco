@@ -3,25 +3,36 @@ mod diagnostic;
 mod symbol_manager;
 pub mod type_manager;
 mod type_node;
+mod types;
 mod utils;
 
 use std::{cell::RefCell, rc::Rc};
 
 use crate::context::Context;
-use anyhow::Result;
+use serde::Serialize;
 use tree_sitter::{Parser, TreeCursor};
 
-pub fn typed_syntax_tree(source_code: String) -> Result<()> {
+#[derive(Serialize, Debug)]
+pub struct EvaluateResult {
+    diagnostics: Vec<diagnostic::Diagnostic>,
+    type_details: Vec<types::TypeDetail>,
+}
+
+pub fn evaluate_type(source_code: String) -> EvaluateResult {
     let ctx = Rc::new(RefCell::new(Context::new(source_code.clone())));
     let mut parser = Parser::new();
-    parser.set_language(&tree_sitter_sofl::language())?;
+    parser
+        .set_language(&tree_sitter_sofl::language())
+        .expect("Error loading SOFL language");
     let tree = parser.parse(source_code, None).unwrap();
 
     let mut cursor = tree.walk();
     traverse(&mut cursor, ctx.clone());
-
-    print!("{:?}", ctx.borrow().diagnostics);
-    Ok(())
+    let ctx = ctx.borrow_mut();
+    EvaluateResult {
+        diagnostics: ctx.diagnostics.clone(),
+        type_details: ctx.collect_types.clone(),
+    }
 }
 
 fn traverse(cursor: &mut TreeCursor, ctx: Rc<RefCell<Context>>) {
@@ -59,7 +70,6 @@ pre abs(1) = 0
 post true
 end_process;
         "#;
-        let result = super::typed_syntax_tree(source_code.to_string());
-        assert!(result.is_ok());
+        super::evaluate_type(source_code.to_string());
     }
 }

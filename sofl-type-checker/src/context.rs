@@ -1,4 +1,7 @@
-use crate::{diagnostic::Diagnostic, symbol_manager::SymbolManager, type_manager::TypeManager};
+use crate::{
+    diagnostic::Diagnostic, symbol_manager::SymbolManager, type_manager::TypeManager,
+    types::TypeDetail,
+};
 
 #[derive(Debug)]
 pub struct Context {
@@ -7,6 +10,7 @@ pub struct Context {
     pub diagnostics: Vec<Diagnostic>,
     pub type_manager: TypeManager,
     pub symbol_manager: SymbolManager,
+    pub collect_types: Vec<TypeDetail>,
 }
 
 impl Context {
@@ -17,6 +21,7 @@ impl Context {
             source_bytes: source.as_bytes().to_vec(),
             source,
             diagnostics: Vec::new(),
+            collect_types: Vec::new(),
         }
     }
 }
