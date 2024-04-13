@@ -1,4 +1,7 @@
 import { appTools, defineConfig } from '@modern-js/app-tools';
+import { tailwindcssPlugin } from '@modern-js/plugin-tailwindcss';
+
+import ArcoWebpackPlugin from '@arco-plugins/webpack-react';
 
 // https://modernjs.dev/en/configure/app/usage
 export default defineConfig({
@@ -20,5 +23,7 @@ export default defineConfig({
     appTools({
       bundler: 'experimental-rspack',
     }),
+    new ArcoWebpackPlugin(),
+    tailwindcssPlugin(),
   ],
 });

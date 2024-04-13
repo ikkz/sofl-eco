@@ -11,7 +11,7 @@ module.exports = grammar({
         $.module_definition,
         optional($.type_definition),
         optional($.variable_definition),
-        optional($.process_definition),
+        optional($.process_definition)
       ),
 
     module_definition: ($) =>
@@ -19,7 +19,7 @@ module.exports = grammar({
         "module",
         field("module_name", $.identifier),
         optional(seq("/", $.identifier)),
-        $._semicolon,
+        $._semicolon
       ),
 
     type_definition: ($) => seq("type", repeat1($.type_definition_item)),
@@ -40,18 +40,23 @@ module.exports = grammar({
         optional($.parameter_list),
         $.process_body,
         "end_process",
-        $._semicolon,
+        $._semicolon
       ),
 
     parameter_list: ($) => sep1($.parameter_item, "|"),
     parameter_item: ($) =>
-      seq($.identifier, repeat(seq(",", $.identifier)), ":", choice($._type, $._expression)),
+      seq(
+        $.identifier,
+        repeat(seq(",", $.identifier)),
+        ":",
+        choice($._type, $._expression)
+      ),
 
     process_body: ($) =>
       seq(
         optional(seq("ext", repeat1($.ext_item))),
         seq("pre", $._expression),
-        seq("post", $._expression),
+        seq("post", $._expression)
       ),
 
     ext_item: ($) => seq(choice("wr", "rd"), $.identifier, ":", $._type),
@@ -66,8 +71,8 @@ module.exports = grammar({
           $.set_type,
           $.list_type,
           $.map_type,
-          $.composite_type,
-        ),
+          $.composite_type
+        )
       ),
 
     type_identifier: ($) => prec(1, $.identifier),
@@ -91,11 +96,11 @@ module.exports = grammar({
               field("filed_name", $.identifier),
               ":",
               field("field_type", $._type),
-              $._semicolon,
-            ),
-          ),
+              $._semicolon
+            )
+          )
         ),
-        "end",
+        "end"
       ),
 
     _expression: ($) =>
@@ -107,8 +112,10 @@ module.exports = grammar({
         $.modify_expression,
         $.function_expression,
         $.quantified_expression,
-        seq("(", $._expression, ")"),
+        $.bracketed_expression
       ),
+
+    bracketed_expression: ($) => seq("(", $._expression, ")"),
 
     expression_list: ($) => commaSep1($._expression),
     _constant_expression: ($) =>
@@ -119,24 +126,30 @@ module.exports = grammar({
         $.char,
         $.bool,
         $.list_expression,
-        $.map_expression,
+        $.map_expression
       ),
     reference_expression: ($) =>
       choice($.identifier, seq($.reference_expression, ".", $.identifier)),
-    list_expression: ($) => seq("{", optional(field("items", $.expression_list)), "}"),
+    list_expression: ($) =>
+      seq("{", optional(field("items", $.expression_list)), "}"),
     map_expression: ($) =>
       seq(
         "{",
         choice("->", seq($.map_item, repeat(seq(",", $.map_item)))),
-        "}",
+        "}"
       ),
-    map_item: ($) => seq(field("key", $._expression), "->", field("value", $._expression)),
+    map_item: ($) =>
+      seq(field("key", $._expression), "->", field("value", $._expression)),
     unary_expression: ($) =>
       prec(11, seq(choice("-", "not", "~"), $._expression)),
     binary_expression: ($) =>
       choice(
-        binary_operators(10, ["=", "<>", "<", "<=", ">", ">=", "inset", "notinset"], $._expression),
-        binary_operators(9, ["*", "/", "div", "rem", "mod",], $._expression),
+        binary_operators(
+          10,
+          ["=", "<>", "<", "<=", ">", ">=", "inset", "notinset"],
+          $._expression
+        ),
+        binary_operators(9, ["*", "/", "div", "rem", "mod"], $._expression),
         binary_operators(8, ["+", "-"], $._expression),
         binary_operators(7, ["and"], $._expression),
         binary_operators(6, ["or"], $._expression),
@@ -150,7 +163,7 @@ module.exports = grammar({
         $.reference_expression,
         ",",
         commaSep1(seq($.identifier, "->", $._expression)),
-        ")",
+        ")"
       ),
     function_expression: ($) =>
       seq($.reference_expression, "(", optional($.expression_list), ")"),
@@ -182,5 +195,12 @@ function commaSep(rule) {
 }
 
 function binary_operators(_prec, operators, exp) {
-  return prec.left(_prec, seq(exp, choice(...operators), exp));
+  return prec.left(
+    _prec,
+    seq(
+      field("left", exp),
+      field("operator", choice(...operators)),
+      field("right", exp)
+    )
+  );
 }

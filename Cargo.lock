@@ -68,6 +68,7 @@ version = "0.1.0"
 dependencies = [
  "serde",
  "serde_json",
+ "sofl-type-checker",
  "tauri",
  "tauri-build",
 ]

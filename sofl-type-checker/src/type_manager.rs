@@ -12,6 +12,7 @@ pub enum LangType {
     Bool,
     Set(Rc<LangType>),
     List(Rc<LangType>),
+    Variable(Rc<LangType>),
     Map(Rc<LangType>, Rc<LangType>),
     MapItem(Rc<LangType>, Rc<LangType>),
     Enumeration(Rc<Vec<String>>),
@@ -48,6 +49,16 @@ impl LangType {
         }
     }
 
+    pub fn variable_type(&self) -> Rc<LangType> {
+        match self.skip_alias().deref() {
+            LangType::Variable(t) => match t.deref() {
+                LangType::Set(t) | LangType::List(t) => t.clone(),
+                _ => t.clone(),
+            },
+            _ => self.clone().into(),
+        }
+    }
+
     pub fn expanded_type(&self) -> String {
         match self {
             LangType::Set(t) => format!("set of {}", t.expanded_type()),
@@ -62,9 +73,9 @@ impl LangType {
                     }
                     s.push_str(&format!("{}: {}", name, t.expanded_type()));
                 }
-                format!("composed of {}", s)
+                format!("composed of {} end;", s)
             }
-            LangType::Alias(name, t) => format!("{} = {}", name, t.expanded_type()),
+            LangType::Alias(_, t) => format!("{}", t.expanded_type()),
             _ => self.to_string(),
         }
     }
@@ -83,6 +94,7 @@ impl Display for LangType {
             LangType::Bool => write!(f, "bool"),
             LangType::Set(t) => write!(f, "set of {}", t),
             LangType::List(t) => write!(f, "list of {}", t),
+            LangType::Variable(t) => write!(f, "{}", t),
             LangType::Map(k, v) => write!(f, "map {} to {}", k, v),
             LangType::MapItem(k, v) => write!(f, "{} -> {}", k, v),
             LangType::Enumeration(e) => {
@@ -105,7 +117,7 @@ impl Display for LangType {
                 }
                 write!(f, "composed of {}", s)
             }
-            LangType::Alias(name, t) => write!(f, "{} = {}", name, t),
+            LangType::Alias(name, _) => write!(f, "{}", name),
         }
     }
 }

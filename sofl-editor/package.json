@@ -25,11 +25,22 @@
     "dist/"
   ],
   "dependencies": {
+    "@arco-design/web-react": "^2.61.3",
+    "@modern-js/plugin-tailwindcss": "2.48.5",
     "@modern-js/runtime": "2.48.5",
+    "@tauri-apps/api": "^1.5.3",
+    "@types/lodash-es": "^4.17.12",
+    "@uiw/codemirror-extensions-events": "^4.21.25",
+    "@uiw/codemirror-theme-github": "^4.21.25",
+    "@uiw/react-codemirror": "^4.21.25",
+    "emittery": "^1.0.3",
+    "jotai": "^2.8.0",
+    "lodash-es": "^4.17.21",
     "react": "~18.2.0",
     "react-dom": "~18.2.0"
   },
   "devDependencies": {
+    "@arco-plugins/webpack-react": "^1.4.9",
     "@modern-js-app/eslint-config": "2.48.5",
     "@modern-js/app-tools": "2.48.5",
     "@modern-js/eslint-config": "2.48.5",
@@ -43,6 +54,7 @@
     "lint-staged": "~13.1.0",
     "prettier": "~2.8.1",
     "rimraf": "~3.0.2",
+    "tailwindcss": "~3.3.3",
     "typescript": "~5.0.4"
   }
 }

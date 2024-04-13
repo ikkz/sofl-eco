@@ -30,7 +30,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
         diagnostics.push(Diagnostic {
             level: diagnostic::Level::Error,
             range: node.range().into(),
-            message: "Syntax error".to_string(),
+            message: "语法错误".to_string(),
         });
         return;
     }
@@ -40,15 +40,12 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             if let Some(child) = node.child(0) {
                 match symbol_manager.resolve_symbol(node, child.utf8_text(&source_bytes).unwrap()) {
                     Some(Symbol::Type(lang_type)) => lang_type.deref().clone().into(),
-                    Some(Symbol::Variable(lang_type)) => {
-                        let lang_type = lang_type.skip_alias().deref().clone();
-                        match lang_type {
-                            LangType::Set(inner) | LangType::List(inner) => {
-                                inner.deref().clone().into()
-                            }
-                            _ => lang_type.into(),
+                    Some(Symbol::Variable(lang_type)) => match lang_type.deref().clone() {
+                        LangType::Set(_) | LangType::List(_) => {
+                            LangType::Variable(lang_type.into()).into()
                         }
-                    }
+                        _ => lang_type.deref().clone().into(),
+                    },
                     _ => LangType::Unknown.into(),
                 }
             } else {
@@ -188,6 +185,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 .pop()
                 .map(|n| type_manager.node_type(n.id()).unwrap_or_default());
             if let Some(lang_type) = lang_type {
+                let lang_type = lang_type.variable_type();
                 nodes.iter().for_each(|n| {
                     let name: String = n.utf8_text(&source_bytes).unwrap().into();
                     collected_types.push(TypeDetail {
@@ -224,7 +222,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 diagnostics.push(Diagnostic {
                     level: diagnostic::Level::Error,
                     range: node.range().into(),
-                    message: "Invalid external item".to_string(),
+                    message: "项目定义粗欧文".to_string(),
                 });
             }
             None
@@ -292,16 +290,27 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             }
         }
         "binary_expression" => {
-            if let (Some(left), Some(operator), Some(right)) =
-                (node.child(0), node.child(1), node.child(2))
-            {
+            if let (Some(left), Some(operator), Some(right)) = (
+                node.child_by_field_name("left"),
+                node.child_by_field_name("operator"),
+                node.child_by_field_name("right"),
+            ) {
                 let left_type = type_manager.node_type(left.id()).unwrap_or_default();
                 let right_type = type_manager.node_type(right.id()).unwrap_or_default();
-                if left_type.deref() != right_type.deref() {
+                if left_type.deref() != right_type.deref()
+                    && !["inset", "notinset"].contains(&operator.kind())
+                {
                     diagnostics.push(Diagnostic {
-                        level: diagnostic::Level::Error,
+                        level: diagnostic::Level::Warning,
                         range: node.range().into(),
-                        message: "Type mismatch".to_string(),
+                        message: format!(
+                            "操作符 {} 的左类型 {} 和右类型 {} 不匹配 {}-{}",
+                            operator.kind(),
+                            left_type.to_string(),
+                            right_type.to_string(),
+                            left.kind(),
+                            right.kind()
+                        ),
                     })
                 }
                 match operator.kind() {
@@ -335,15 +344,17 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                         diagnostics.push(Diagnostic {
                             range: node.range().into(),
                             level: diagnostic::Level::Warning,
-                            message: format!("Field {} not found", name),
+                            message: format!("类型 {} 没有成员 {}", left_type.to_string(), name),
                         });
                     }
-                    field_type
-                        .cloned()
-                        .unwrap_or_default()
-                        .deref()
-                        .clone()
-                        .into()
+                    let field_type = field_type.cloned().unwrap_or_default();
+                    collected_types.push(TypeDetail {
+                        range: id.range().into(),
+                        source: id.utf8_text(&source_bytes).unwrap().to_string(),
+                        type_str: field_type.to_string(),
+                        type_expanded: field_type.expanded_type(),
+                    });
+                    field_type.deref().clone().into()
                 } else {
                     LangType::Unknown.into()
                 }
@@ -391,7 +402,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                                 diagnostics.push(Diagnostic {
                                     level: diagnostic::Level::Warning,
                                     range: arg.range().into(),
-                                    message: "Invalid argument type".to_string(),
+                                    message: "参数类型错误".to_string(),
                                 });
                             }
                         });
@@ -408,7 +419,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                                 diagnostics.push(Diagnostic {
                                     level: diagnostic::Level::Warning,
                                     range: fn_name.range().into(),
-                                    message: "Invalid function type".to_string(),
+                                    message: "函数类型错误".to_string(),
                                 });
                                 LangType::Unknown.into()
                             }
@@ -416,7 +427,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                             diagnostics.push(Diagnostic {
                                 level: diagnostic::Level::Warning,
                                 range: node.range().into(),
-                                message: "Function not found".to_string(),
+                                message: "未找到函数定义".to_string(),
                             });
                             LangType::Unknown.into()
                         }
@@ -426,8 +437,20 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 diagnostics.push(Diagnostic {
                     level: diagnostic::Level::Error,
                     range: node.range().into(),
-                    message: "Invalid function expression".to_string(),
+                    message: "错误的函数表达式".to_string(),
                 });
+                LangType::Unknown.into()
+            }
+        }
+        "bracketed_expression" => {
+            if let Some(child) = node.child(1) {
+                type_manager
+                    .node_type(child.id())
+                    .unwrap_or_default()
+                    .deref()
+                    .clone()
+                    .into()
+            } else {
                 LangType::Unknown.into()
             }
         }

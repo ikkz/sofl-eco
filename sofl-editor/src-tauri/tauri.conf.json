@@ -56,10 +56,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 700,
         "resizable": true,
         "title": "sofl-editor",
-        "width": 800
+        "width": 1000
       }
     ]
   }
