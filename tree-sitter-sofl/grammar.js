@@ -135,7 +135,6 @@ module.exports = grammar({
       prec(11, seq(choice("-", "not", "~"), $._expression)),
     binary_expression: ($) =>
       choice(
-
         binary_operators(10, ["=", "<>", "<", "<=", ">", ">=", "inset", "notinset"], $._expression),
         binary_operators(9, ["*", "/", "div", "rem", "mod",], $._expression),
         binary_operators(8, ["+", "-"], $._expression),
@@ -154,7 +153,7 @@ module.exports = grammar({
         ")",
       ),
     function_expression: ($) =>
-      seq($.identifier, "(", optional($.expression_list), ")"),
+      seq($.reference_expression, "(", optional($.expression_list), ")"),
 
     quantified_expression: ($) =>
       seq(choice("forall", "exists"), "[", $.binding_list, "]", $._expression),

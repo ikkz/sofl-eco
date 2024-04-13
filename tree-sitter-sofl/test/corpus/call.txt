@@ -1,0 +1,27 @@
+==================
+Call
+==================
+
+module ATM;
+process Withdraw()
+pre abs(1) = 0
+post true
+end_process;
+
+---
+
+(source_file
+  (module_definition
+    (identifier))
+  (process_definition
+    (process_definition_item
+      (identifier)
+      (process_body
+        (binary_expression
+          (function_expression
+            (reference_expression
+              (identifier))
+            (expression_list
+              (int)))
+          (int))
+        (bool)))))

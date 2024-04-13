@@ -1187,7 +1187,7 @@
       "members": [
         {
           "type": "SYMBOL",
-          "name": "identifier"
+          "name": "reference_expression"
         },
         {
           "type": "STRING",

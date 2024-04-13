@@ -1,4 +1,4 @@
-use std::{collections::HashMap, rc::Rc};
+use std::{collections::HashMap, ops::Deref, rc::Rc};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum LangType {
@@ -32,6 +32,20 @@ impl LangType {
             lang_type = alias_type;
         }
         return lang_type.clone().into();
+    }
+
+    pub fn is_numeric(&self) -> bool {
+        match self.skip_alias().deref() {
+            LangType::Nat | LangType::Nat0 | LangType::Int | LangType::Real => true,
+            _ => false,
+        }
+    }
+
+    pub fn is_set_like(&self) -> bool {
+        match self.skip_alias().deref() {
+            LangType::Set(_) | LangType::List(_) | LangType::Map(_, _) => true,
+            _ => false,
+        }
     }
 }
 
