@@ -57,3 +57,4 @@ jobs:
           prerelease: false
           args: ${{ matrix.settings.args }}
           projectPath: sofl-editor
+          tauriScript: pnpm tauri
