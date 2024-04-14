@@ -19,22 +19,23 @@ export const Editor = () => {
 
   const onChange = useCallback((newCode: string) => setCode(newCode), []);
 
-  useEffect(() => {
-    emitter.on(AppEvent.SET_SELECTION, (range: TSRange) => {
-      const view = editorRef.current?.view;
-      if (view) {
-        view.dispatch({
-          selection: EditorSelection.create([
-            EditorSelection.range(range.from, range.to),
-          ]),
-        });
-      }
-    });
-  }, []);
+  useEffect(
+    () =>
+      emitter.on(AppEvent.SET_SELECTION, (range: TSRange) => {
+        const view = editorRef.current?.view;
+        if (view) {
+          view.dispatch({
+            selection: EditorSelection.create([
+              EditorSelection.range(range.from, range.to),
+            ]),
+          });
+        }
+      }),
+    [],
+  );
 
   return (
     <CodeMirror
-      key="editor"
       value={code}
       onChange={onChange}
       theme={githubLight}
