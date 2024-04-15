@@ -21,7 +21,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
         type_manager,
         diagnostics,
         source: _,
-        collect_types: collected_types,
+        collect_types,
     } = ctx.deref_mut();
 
     let node = cursor.node();
@@ -128,7 +128,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             if let (Some(identifier), Some(lang_type)) = (node.child(0), node.child(2)) {
                 let name: String = { identifier.utf8_text(&source_bytes).unwrap().into() };
                 let lang_type = type_manager.node_type(lang_type.id()).unwrap_or_default();
-                collected_types.push(TypeDetail {
+                collect_types.push(TypeDetail {
                     range: identifier.range().into(),
                     source: identifier.utf8_text(&source_bytes).unwrap().to_string(),
                     type_str: lang_type.to_string(),
@@ -146,7 +146,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             if let (Some(identifier), Some(lang_type)) = (node.child(0), node.child(2)) {
                 let name: String = { identifier.utf8_text(&source_bytes).unwrap().into() };
                 let lang_type = type_manager.node_type(lang_type.id()).unwrap_or_default();
-                collected_types.push(TypeDetail {
+                collect_types.push(TypeDetail {
                     range: identifier.range().into(),
                     source: identifier.utf8_text(&source_bytes).unwrap().to_string(),
                     type_str: lang_type.to_string(),
@@ -169,7 +169,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 let lang_type = lang_type.variable_type();
                 nodes.iter().for_each(|n| {
                     let name: String = n.utf8_text(&source_bytes).unwrap().into();
-                    collected_types.push(TypeDetail {
+                    collect_types.push(TypeDetail {
                         range: n.range().into(),
                         source: n.utf8_text(&source_bytes).unwrap().to_string(),
                         type_str: lang_type.to_string(),
@@ -188,7 +188,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             if let (Some(name_node), Some(lang_type)) = (node.child(1), node.child(3)) {
                 let name: String = name_node.utf8_text(&source_bytes).unwrap().into();
                 let lang_type = type_manager.node_type(lang_type.id()).unwrap_or_default();
-                collected_types.push(TypeDetail {
+                collect_types.push(TypeDetail {
                     range: name_node.range().into(),
                     source: name_node.utf8_text(&source_bytes).unwrap().to_string(),
                     type_str: lang_type.to_string(),
@@ -280,7 +280,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             ) {
                 let left_type = type_manager.node_type(left.id()).unwrap_or_default();
                 let right_type = type_manager.node_type(right.id()).unwrap_or_default();
-                if left_type.deref() != right_type.deref()
+                if left_type.skip_alias().deref() != right_type.skip_alias().deref()
                     && !["inset", "notinset"].contains(&operator.kind())
                 {
                     diagnostics.push(Diagnostic {
@@ -327,7 +327,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                         });
                     }
                     let field_type = field_type.cloned().unwrap_or_default();
-                    collected_types.push(TypeDetail {
+                    collect_types.push(TypeDetail {
                         range: id.range().into(),
                         source: id.utf8_text(&source_bytes).unwrap().to_string(),
                         type_str: field_type.to_string(),
@@ -431,7 +431,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
     };
     if let Some(lang_type) = node_type {
         type_manager.set_node_type(node.id(), lang_type.clone().into());
-        collected_types.push(TypeDetail {
+        collect_types.push(TypeDetail {
             range: node.range().into(),
             source: node.utf8_text(&source_bytes).unwrap().to_string(),
             type_str: lang_type.to_string(),

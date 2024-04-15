@@ -16,4 +16,52 @@ post (exists[x: account_file] x = account1 and x.balance >= amount and cash = am
         or not exists[x: account_file] x = account1 and x.balance >= amount and e_msg = "The amount is too big"
 end_process;`,
   },
+  {
+    name: '复杂类型',
+    code: `
+    module A;
+type
+  A = int;
+  B = real;
+  C = composed of
+    a: A;
+    b: B;
+  end;
+  D = composed of
+    a: A
+    c: C;
+  end;
+  E = map int to string;
+var
+  e: D;
+
+process Hello(input_f: A | input_g: B) output_h: C | output_i: D
+ext rd files: E
+pre (input_f + input_g) <> 0 and files(input_f) = "index" or (1+2) inset {1,2,3,4,5,6,7}
+post output_i.c.b = output_h.b and input_f = output_h.a
+end_process;`,
+  },
+  {
+    name: '语法检查',
+    code: `module A;
+
+type
+  A = int;
+  B = A;
+  C = composed of
+    a: A;
+    b: B;
+  end;
+  D = composed of
+    a: A
+    c: C;
+  end;
+var
+  e: D;
+
+process Hello(input_f: A | input_g: B) output_h: C | output_i: D
+pre input_f = input_g and
+post output_i.c.b = output_h.b and input_f = output_h.b
+end_process;`,
+  },
 ];
