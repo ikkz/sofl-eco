@@ -35,93 +35,75 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
         return;
     }
 
-    let node_type: Option<LangType> = match node.kind() {
+    let unknown = Rc::new(LangType::Unknown);
+    let node_type: Option<Rc<LangType>> = match node.kind() {
         "type_identifier" => {
             if let Some(child) = node.child(0) {
                 match symbol_manager.resolve_symbol(node, child.utf8_text(&source_bytes).unwrap()) {
-                    Some(Symbol::Type(lang_type)) => lang_type.deref().clone().into(),
+                    Some(Symbol::Type(lang_type)) => lang_type.into(),
                     Some(Symbol::Variable(lang_type)) => match lang_type.deref().clone() {
                         LangType::Set(_) | LangType::List(_) => {
-                            LangType::Variable(lang_type.into()).into()
+                            Rc::new(LangType::Variable(lang_type)).into()
                         }
-                        _ => lang_type.deref().clone().into(),
+                        _ => lang_type.into(),
                     },
-                    _ => LangType::Unknown.into(),
+                    _ => unknown.into(),
                 }
             } else {
-                LangType::Unknown.into()
+                unknown.into()
             }
         }
         // types
-        "int" => LangType::Int.into(),
-        "real" => LangType::Real.into(),
-        "string" => LangType::String.into(),
-        "char" => LangType::Char.into(),
-        "bool" => LangType::Bool.into(),
+        "int" => Rc::new(LangType::Int).into(),
+        "real" => Rc::new(LangType::Real).into(),
+        "string" => Rc::new(LangType::String).into(),
+        "char" => Rc::new(LangType::Char).into(),
+        "bool" => Rc::new(LangType::Bool).into(),
         "primitive_type" => node
             .child(0)
             .map(|child| {
-                type_manager
-                    .node_type(child.id())
-                    .unwrap_or_else(|| match child.utf8_text(&source_bytes).unwrap() {
-                        "nat" => LangType::Nat.into(),
-                        "nat0" => LangType::Nat0.into(),
-                        _ => LangType::Unknown.into(),
-                    })
-                    .deref()
-                    .clone()
+                type_manager.node_type(child.id()).unwrap_or_else(|| {
+                    match child.utf8_text(&source_bytes).unwrap() {
+                        "nat" => Rc::new(LangType::Nat).into(),
+                        "nat0" => Rc::new(LangType::Nat0).into(),
+                        _ => unknown.into(),
+                    }
+                })
             })
             .unwrap_or_default()
             .into(),
-        "enumeration_type" => LangType::Enumeration(
+        "enumeration_type" => Rc::new(LangType::Enumeration(
             collect_kind(&mut node.walk(), "identifier")
                 .iter()
                 .map(|n| n.utf8_text(&source_bytes).unwrap().into())
                 .collect::<Vec<_>>()
                 .into(),
-        )
+        ))
         .into(),
-        "set_type" => {
-            if let Some(child) = node.child(2) {
-                LangType::Set(
-                    type_manager
-                        .node_type(child.id())
-                        .unwrap_or_default()
-                        .into(),
-                )
-                .into()
-            } else {
-                LangType::Set(LangType::Unknown.into()).into()
-            }
-        }
-        "list_type" => {
-            if let Some(child) = node.child(2) {
-                LangType::List(
-                    type_manager
-                        .node_type(child.id())
-                        .unwrap_or_default()
-                        .into(),
-                )
-                .into()
-            } else {
-                LangType::List(LangType::Unknown.into()).into()
-            }
-        }
-        "map_type" => {
+        "set_type" => Rc::new(LangType::Set(if let Some(child) = node.child(2) {
+            type_manager.node_type(child.id()).unwrap_or_default()
+        } else {
+            unknown
+        }))
+        .into(),
+        "list_type" => Rc::new(LangType::List(if let Some(child) = node.child(2) {
+            type_manager.node_type(child.id()).unwrap_or_default()
+        } else {
+            unknown
+        }))
+        .into(),
+        "map_type" => Rc::new(
             if let (Some(key), Some(value)) = (node.child(1), node.child(3)) {
                 LangType::Map(
-                    type_manager.node_type(key.id()).unwrap_or_default().into(),
-                    type_manager
-                        .node_type(value.id())
-                        .unwrap_or_default()
-                        .into(),
+                    type_manager.node_type(key.id()).unwrap_or_default(),
+                    type_manager.node_type(value.id()).unwrap_or_default(),
                 )
-                .into()
             } else {
-                LangType::Map(LangType::Unknown.into(), LangType::Unknown.into()).into()
-            }
-        }
-        "composite_type" => LangType::Composite(
+                LangType::Map(unknown.clone(), unknown)
+            },
+        )
+        .into(),
+        "composite_type" => Rc::new(LangType::Composite(
             node.named_children(&mut node.walk())
                 .chunks(2)
                 .into_iter()
@@ -141,7 +123,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 })
                 .collect::<HashMap<_, _>>()
                 .into(),
-        )
+        ))
         .into(),
         "type_definition_item" => {
             if let (Some(identifier), Some(lang_type)) = (node.child(0), node.child(2)) {
@@ -228,42 +210,46 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             None
         }
         // expressions
-        "list_expression" => {
+        "list_expression" => Rc::new(
             if let Some(Some(Some(result))) = node.child_by_field_name("items").map(|items| {
                 items
                     .child(0)
                     .map(|first| type_manager.node_type(first.id()))
             }) {
-                LangType::List(result.clone()).into()
+                LangType::List(result)
             } else {
-                LangType::List(LangType::Unknown.into()).into()
-            }
-        }
+                LangType::List(unknown)
+            },
+        )
+        .into(),
         "map_item" => {
             let key = node.child_by_field_name("key");
             let value = node.child_by_field_name("value");
+
             if let (Some(key), Some(value)) = (key, value) {
                 let key_type = type_manager.node_type(key.id());
                 let value_type = type_manager.node_type(value.id());
-                LangType::MapItem(key_type.unwrap_or_default(), value_type.unwrap_or_default())
-                    .into()
+                Rc::new(LangType::MapItem(
+                    key_type.unwrap_or_default(),
+                    value_type.unwrap_or_default(),
+                ))
+                .into()
             } else {
-                LangType::Unknown.into()
+                unknown.into()
             }
         }
         "map_expression" => {
-            let unknown: Option<LangType> =
-                LangType::MapItem(LangType::Unknown.into(), LangType::Unknown.into()).into();
+            let unknown: Option<Rc<LangType>> =
+                Rc::new(LangType::MapItem(unknown.clone(), unknown)).into();
             if let Some(first) = node.child(1) {
                 match first.kind() {
                     "map_item" => {
                         if let LangType::MapItem(key, value) = type_manager
                             .node_type(first.id())
-                            .clone()
                             .unwrap_or_default()
                             .deref()
                         {
-                            LangType::Map(key.clone(), value.clone()).into()
+                            Rc::new(LangType::Map(key.clone(), value.clone())).into()
                         } else {
                             unknown
                         }
@@ -280,13 +266,11 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                     "-" | "not" | "~" => type_manager
                         .node_type(operand.id())
                         .unwrap_or_default()
-                        .deref()
-                        .clone()
                         .into(),
-                    _ => LangType::Unknown.into(),
+                    _ => unknown.into(),
                 }
             } else {
-                LangType::Unknown.into()
+                unknown.into()
             }
         }
         "binary_expression" => {
@@ -312,15 +296,13 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                     })
                 }
                 match operator.kind() {
-                    "+" | "-" | "*" | "/" | "div" | "rem" | "mod" => {
-                        left_type.deref().clone().into()
-                    }
+                    "+" | "-" | "*" | "/" | "div" | "rem" | "mod" => left_type.into(),
                     "or" | "=>" | "<=>" | "=" | "<>" | "<" | "<=" | ">" | ">=" | "inset"
-                    | "notinset" | "and" => LangType::Bool.into(),
-                    _ => LangType::Unknown.into(),
+                    | "notinset" | "and" => Rc::new(LangType::Bool).into(),
+                    _ => unknown.into(),
                 }
             } else {
-                LangType::Unknown.into()
+                unknown.into()
             }
         }
         "reference_expression" => {
@@ -329,9 +311,9 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 let name = child.utf8_text(&source_bytes).unwrap();
                 if let Some(Symbol::Variable(lang_type)) = symbol_manager.resolve_symbol(node, name)
                 {
-                    lang_type.deref().clone().into()
+                    lang_type.into()
                 } else {
-                    LangType::Unknown.into()
+                    unknown.into()
                 }
             } else if let (Some(refer), Some(id)) = (node.child(0), node.child(2)) {
                 let left_type = type_manager.node_type(refer.id()).unwrap_or_default();
@@ -352,12 +334,12 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                         type_str: field_type.to_string(),
                         type_expanded: field_type.expanded_type(),
                     });
-                    field_type.deref().clone().into()
+                    field_type.into()
                 } else {
-                    LangType::Unknown.into()
+                    unknown.into()
                 }
             } else {
-                LangType::Unknown.into()
+                unknown.into()
             }
         }
         "modify_expression" => {
@@ -365,33 +347,28 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 type_manager
                     .node_type(refer.id())
                     .unwrap_or_default()
-                    .deref()
-                    .clone()
                     .into()
             } else {
-                LangType::Unknown.into()
+                unknown.into()
             }
         }
-        "quantified_expression" => LangType::Bool.into(),
+        "quantified_expression" => Rc::new(LangType::Bool).into(),
         "function_expression" => {
             let fn_name = node.child(0);
-            let args_node = node.child(2);
+            let expr_list = node.child(2);
             if let Some(fn_name) = fn_name {
                 let str_name = fn_name.utf8_text(&source_bytes).unwrap();
-                let args = if let Some(args_node) = args_node {
-                    collect_when(&mut args_node.walk(), |node| {
-                        node.kind().ends_with("expression")
-                    })
+                let args = if expr_list.is_some_and(|n| n.kind() == "expression_list") {
+                    let expr_list = expr_list.unwrap();
+                    expr_list
+                        .named_children(&mut expr_list.walk())
+                        .collect::<Vec<_>>()
                 } else {
                     vec![]
                 };
-                let first_type = args.get(0).map(|node| {
-                    type_manager
-                        .node_type(node.id())
-                        .unwrap_or_default()
-                        .deref()
-                        .clone()
-                });
+                let first_type = args
+                    .get(0)
+                    .map(|node| type_manager.node_type(node.id()).unwrap_or_default());
                 match str_name {
                     "abs" | "bound" | "floor" | "power" => {
                         args.iter().for_each(|arg| {
@@ -407,19 +384,19 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                         first_type
                     }
                     "union" | "inter" | "diff" | "dunion" | "dinter" => first_type,
-                    "len" => LangType::Nat.into(),
+                    "len" => Rc::new(LangType::Nat).into(),
                     _ => {
                         let fn_type = type_manager.node_type(fn_name.id());
                         if let Some(fn_type) = fn_type {
                             if let LangType::Map(_, value) = fn_type.skip_alias().deref() {
-                                value.deref().clone().into()
+                                value.clone().into()
                             } else {
                                 diagnostics.push(Diagnostic {
                                     level: diagnostic::Level::Warning,
                                     range: fn_name.range().into(),
                                     message: "函数类型错误".to_string(),
                                 });
-                                LangType::Unknown.into()
+                                unknown.into()
                             }
                         } else {
                             diagnostics.push(Diagnostic {
@@ -427,7 +404,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                                 range: node.range().into(),
                                 message: "未找到函数定义".to_string(),
                             });
-                            LangType::Unknown.into()
+                            unknown.into()
                         }
                     }
                 }
@@ -437,7 +414,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                     range: node.range().into(),
                     message: "错误的函数表达式".to_string(),
                 });
-                LangType::Unknown.into()
+                unknown.into()
             }
         }
         "bracketed_expression" => {
@@ -445,11 +422,9 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 type_manager
                     .node_type(child.id())
                     .unwrap_or_default()
-                    .deref()
-                    .clone()
                     .into()
             } else {
-                LangType::Unknown.into()
+                unknown.into()
             }
         }
 
