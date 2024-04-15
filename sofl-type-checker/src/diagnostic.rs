@@ -4,6 +4,7 @@ use serde::Serialize;
 pub enum Level {
     Error,
     Warning,
+    #[allow(dead_code)]
     Info,
 }
 

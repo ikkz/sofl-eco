@@ -1,10 +1,9 @@
 use crate::context::Context;
-use crate::diagnostic::Diagnostic;
+use crate::diagnostic::{self, Diagnostic};
 use crate::symbol_manager::Symbol;
 use crate::type_manager::LangType;
 use crate::types::TypeDetail;
 use crate::utils::collect_kind;
-use crate::{diagnostic, utils::collect_when};
 use itertools::Itertools;
 use std::cell::RefCell;
 use std::{
