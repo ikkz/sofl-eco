@@ -48,7 +48,9 @@ export const Panel = () => {
               content={
                 <div>
                   {item.message}
-                  <div className="text-xs">{formatRange(item.range)}</div>
+                  <div className="text-xs text-gray-600">
+                    {formatRange(item.range)}
+                  </div>
                 </div>
               }
               type={item.level.toLowerCase() as any}
