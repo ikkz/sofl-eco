@@ -9,9 +9,14 @@ module.exports = grammar({
     source_file: ($) =>
       seq(
         $.module_definition,
-        optional($.type_definition),
-        optional($.variable_definition),
-        optional($.process_definition)
+        repeat(
+          choice(
+            $.function_definition,
+            $.type_definition,
+            $.variable_definition
+          )
+        ),
+        $.process_definition
       ),
 
     module_definition: ($) =>
@@ -21,6 +26,22 @@ module.exports = grammar({
         optional(seq("/", $.identifier)),
         $._semicolon
       ),
+
+    function_definition: ($) =>
+      seq("function", repeat1($.function_definition_item)),
+
+    function_definition_item: ($) =>
+      seq(
+        field("function_name", $.identifier),
+        optional($.generic_types),
+        "(",
+        optional(commaSep1(field("parameter", $._type))),
+        ")",
+        ":",
+        field("return_type", $._type),
+        $._semicolon
+      ),
+    generic_types: ($) => seq("<", commaSep1($.identifier), ">"),
 
     type_definition: ($) => seq("type", repeat1($.type_definition_item)),
     type_definition_item: ($) => seq($.identifier, "=", $._type, $._semicolon),
@@ -69,9 +90,8 @@ module.exports = grammar({
           $.primitive_type,
           $.enumeration_type,
           $.set_type,
-          $.list_type,
           $.map_type,
-          $.composite_type
+          $.composite_type,
         )
       ),
 
@@ -82,7 +102,6 @@ module.exports = grammar({
     enumeration_type: ($) => seq("{", commaSep1($.enumeration_value), "}"),
     enumeration_value: ($) => seq("<", $.identifier, ">"),
     set_type: ($) => seq("set", "of", $._type),
-    list_type: ($) => seq("list", "of", $._type),
     map_type: ($) =>
       seq("map", field("key", $._type), "to", field("value", $._type)),
     composite_type: ($) =>
@@ -102,8 +121,7 @@ module.exports = grammar({
         ),
         "end"
       ),
-
-    _expression: ($) =>
+       _expression: ($) =>
       choice(
         $._constant_expression,
         $.unary_expression,
@@ -125,12 +143,12 @@ module.exports = grammar({
         $.string,
         $.char,
         $.bool,
-        $.list_expression,
+        $.set_expression,
         $.map_expression
       ),
     reference_expression: ($) =>
       choice($.identifier, seq($.reference_expression, ".", $.identifier)),
-    list_expression: ($) =>
+    set_expression: ($) =>
       seq("{", optional(field("items", $.expression_list)), "}"),
     map_expression: ($) =>
       seq(

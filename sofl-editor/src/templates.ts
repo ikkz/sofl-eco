@@ -2,6 +2,12 @@ export const templates = [
   {
     name: 'ATM 模块',
     code: `module ATM;
+function
+    union<T>(T, T): T;
+    diff<T>(T, T): T;
+    len<T>(T): int;
+    index<T>(set of T, int): T
+    values<T>(map int to T): set of T
 type
     Account = composed of
         balance: real
@@ -14,6 +20,8 @@ pre account1 inset account_file and account1.balance >= amount
 post (exists[x: account_file] x = account1 and x.balance >= amount and cash = amount)
         and account_file = union(diff(~account_file, {account1}), {modify(account1, balance -> account1.balance - amount)})
         or not exists[x: account_file] x = account1 and x.balance >= amount and e_msg = "The amount is too big"
+        and len(account_file) = len(~account_file)
+        and index(account_file, 1)
 end_process;`,
   },
   {

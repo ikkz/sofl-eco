@@ -5,6 +5,7 @@ pub mod type_manager;
 mod type_node;
 mod types;
 mod utils;
+mod lang_type;
 
 use std::{cell::RefCell, rc::Rc};
 

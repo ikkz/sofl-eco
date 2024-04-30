@@ -1,7 +1,7 @@
 use crate::context::Context;
 use crate::diagnostic::{self, Diagnostic};
+use crate::lang_type::{self, LangType};
 use crate::symbol_manager::Symbol;
-use crate::type_manager::LangType;
 use crate::types::TypeDetail;
 use crate::utils::collect_kind;
 use itertools::Itertools;
@@ -39,12 +39,12 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
         "type_identifier" => {
             if let Some(child) = node.child(0) {
                 match symbol_manager.resolve_symbol(node, child.utf8_text(&source_bytes).unwrap()) {
-                    Some(Symbol::Type(lang_type)) => lang_type.into(),
+                    Some(Symbol::Type(lang_type)) => lang_type.clone().into(),
                     Some(Symbol::Variable(lang_type)) => match lang_type.deref().clone() {
                         LangType::Set(_) | LangType::List(_) => {
-                            Rc::new(LangType::Variable(lang_type)).into()
+                            Rc::new(LangType::Variable(lang_type.clone().into())).into()
                         }
-                        _ => lang_type.into(),
+                        _ => lang_type.clone().into(),
                     },
                     _ => unknown.into(),
                 }
@@ -124,6 +124,54 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                 .into(),
         ))
         .into(),
+        "function_definition_item" => {
+            let mut cursor = node.walk();
+            let arguments = node
+                .children_by_field_name("parameter", &mut cursor)
+                .map(|node| type_manager.node_type(node.id()).unwrap_or_default())
+                .collect::<Vec<_>>();
+            let return_type = node
+                .child_by_field_name("return_type")
+                .map(|node| type_manager.node_type(node.id()).unwrap_or_default())
+                .unwrap_or_default();
+            if let Some(name) = node
+                .child_by_field_name("function_name")
+                .map(|node| node.utf8_text(&source_bytes).unwrap().to_string())
+            {
+                if let Some(Some(parent)) = node.parent().map(|p| p.parent()) {
+                    symbol_manager.add_symbol(
+                        &parent,
+                        &name,
+                        Symbol::Function(Rc::new(LangType::Function(
+                            lang_type::function::FunctionType {
+                                arguments,
+                                return_type,
+                                generics: symbol_manager.node_symbols(&node).map_or_else(
+                                    || vec![],
+                                    |table| {
+                                        table
+                                            .values()
+                                            .filter_map(|symbol| {
+                                                if let Symbol::Type(t) = symbol {
+                                                    if matches!(t.deref(), LangType::Generic(_)) {
+                                                        Some(t.clone())
+                                                    } else {
+                                                        None
+                                                    }
+                                                } else {
+                                                    None
+                                                }
+                                            })
+                                            .collect_vec()
+                                    },
+                                ),
+                            },
+                        ))),
+                    )
+                }
+            }
+            None
+        }
         "type_definition_item" => {
             if let (Some(identifier), Some(lang_type)) = (node.child(0), node.child(2)) {
                 let name: String = { identifier.utf8_text(&source_bytes).unwrap().into() };
@@ -134,11 +182,13 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                     type_str: lang_type.to_string(),
                     type_expanded: lang_type.expanded_type(),
                 });
-                symbol_manager.add_symbol(
-                    &node.parent().unwrap().parent().unwrap(),
-                    &name,
-                    Symbol::Type(LangType::Alias(name.clone(), lang_type).into()),
-                );
+                if let Some(Some(parent)) = node.parent().map(|p| p.parent()) {
+                    symbol_manager.add_symbol(
+                        &parent,
+                        &name,
+                        Symbol::Type(LangType::Alias(name.clone(), lang_type).into()),
+                    );
+                }
             }
             None
         }
@@ -152,35 +202,44 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                     type_str: lang_type.to_string(),
                     type_expanded: lang_type.expanded_type(),
                 });
-                symbol_manager.add_symbol(
-                    &node.parent().unwrap().parent().unwrap(),
-                    &name,
-                    Symbol::Variable(lang_type),
-                );
+                if let Some(Some(parent)) = node.parent().map(|p| p.parent()) {
+                    symbol_manager.add_symbol(&parent, &name, Symbol::Variable(lang_type));
+                }
+            }
+            None
+        }
+        "generic_types" => {
+            let parent = node.parent().unwrap();
+            for id in collect_kind(&mut node.walk(), "identifier") {
+                let generic_name = id.utf8_text(&source_bytes).unwrap();
+                let generic_type = LangType::Generic(generic_name.into());
+                symbol_manager.add_symbol(&parent, generic_name, Symbol::Type(generic_type.into()));
             }
             None
         }
         "parameter_item" => {
-            let mut nodes = node.named_children(&mut node.walk()).collect::<Vec<_>>();
-            let lang_type = nodes
-                .pop()
-                .map(|n| type_manager.node_type(n.id()).unwrap_or_default());
-            if let Some(lang_type) = lang_type {
-                let lang_type = lang_type.variable_type();
-                nodes.iter().for_each(|n| {
-                    let name: String = n.utf8_text(&source_bytes).unwrap().into();
-                    collect_types.push(TypeDetail {
-                        range: n.range().into(),
-                        source: n.utf8_text(&source_bytes).unwrap().to_string(),
-                        type_str: lang_type.to_string(),
-                        type_expanded: lang_type.expanded_type(),
+            if let Some(Some(parent)) = node.parent().map(|p| p.parent()) {
+                let mut nodes = node.named_children(&mut node.walk()).collect::<Vec<_>>();
+                let lang_type = nodes
+                    .pop()
+                    .map(|n| type_manager.node_type(n.id()).unwrap_or_default());
+                if let Some(lang_type) = lang_type {
+                    let lang_type = lang_type.variable_type();
+                    nodes.iter().for_each(|n| {
+                        let name: String = n.utf8_text(&source_bytes).unwrap().into();
+                        collect_types.push(TypeDetail {
+                            range: n.range().into(),
+                            source: n.utf8_text(&source_bytes).unwrap().to_string(),
+                            type_str: lang_type.to_string(),
+                            type_expanded: lang_type.expanded_type(),
+                        });
+                        symbol_manager.add_symbol(
+                            &parent,
+                            &name,
+                            Symbol::Variable(lang_type.clone()),
+                        );
                     });
-                    symbol_manager.add_symbol(
-                        &node.parent().unwrap().parent().unwrap(),
-                        &name,
-                        Symbol::Variable(lang_type.clone()),
-                    );
-                });
+                }
             }
             None
         }
@@ -194,11 +253,9 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                     type_str: lang_type.to_string(),
                     type_expanded: lang_type.expanded_type(),
                 });
-                symbol_manager.add_symbol(
-                    &node.parent().unwrap().parent().unwrap(),
-                    &name,
-                    Symbol::Variable(lang_type),
-                );
+                if let Some(Some(parent)) = node.parent().map(|p| p.parent()) {
+                    symbol_manager.add_symbol(&parent, &name, Symbol::Variable(lang_type));
+                }
             } else {
                 diagnostics.push(Diagnostic {
                     level: diagnostic::Level::Error,
@@ -209,15 +266,15 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             None
         }
         // expressions
-        "list_expression" => Rc::new(
+        "set_expression" => Rc::new(
             if let Some(Some(Some(result))) = node.child_by_field_name("items").map(|items| {
                 items
                     .child(0)
                     .map(|first| type_manager.node_type(first.id()))
             }) {
-                LangType::List(result)
+                LangType::Set(result)
             } else {
-                LangType::List(unknown)
+                LangType::Set(unknown)
             },
         )
         .into(),
@@ -308,11 +365,11 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             if node.child_count() == 1 {
                 let child = node.child(0).unwrap();
                 let name = child.utf8_text(&source_bytes).unwrap();
-                if let Some(Symbol::Variable(lang_type)) = symbol_manager.resolve_symbol(node, name)
-                {
-                    lang_type.into()
-                } else {
-                    unknown.into()
+                match symbol_manager.resolve_symbol(node, name) {
+                    Some(Symbol::Variable(lang_type)) | Some(Symbol::Function(lang_type)) => {
+                        lang_type.clone().into()
+                    }
+                    _ => unknown.into(),
                 }
             } else if let (Some(refer), Some(id)) = (node.child(0), node.child(2)) {
                 let left_type = type_manager.node_type(refer.id()).unwrap_or_default();
@@ -361,51 +418,39 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
                     let expr_list = expr_list.unwrap();
                     expr_list
                         .named_children(&mut expr_list.walk())
+                        .map(|node| type_manager.node_type(node.id()).unwrap_or_default())
                         .collect::<Vec<_>>()
                 } else {
                     vec![]
                 };
-                let first_type = args
-                    .get(0)
-                    .map(|node| type_manager.node_type(node.id()).unwrap_or_default());
-                match str_name {
-                    "abs" | "bound" | "floor" | "power" => {
-                        args.iter().for_each(|arg| {
-                            let arg_type = type_manager.node_type(arg.id());
-                            if arg_type.is_none() || !arg_type.unwrap().skip_alias().is_numeric() {
+
+                if let Some(fn_type) = type_manager.node_type(fn_name.id()) {
+                    match fn_type.skip_alias().deref() {
+                        LangType::Map(_, value) => value.clone().into(),
+                        LangType::Function(func) => {
+                            if func.arguments.len() != args.len() {
                                 diagnostics.push(Diagnostic {
-                                    level: diagnostic::Level::Warning,
-                                    range: arg.range().into(),
-                                    message: "参数类型错误".to_string(),
+                                    level: diagnostic::Level::Error,
+                                    range: node.range().into(),
+                                    message: format!(
+                                        "函数 {} 参数数量不匹配，期望 {} 个，实际 {} 个",
+                                        str_name,
+                                        func.arguments.len(),
+                                        args.len()
+                                    ),
                                 });
                             }
-                        });
-                        first_type
-                    }
-                    "union" | "inter" | "diff" | "dunion" | "dinter" => first_type,
-                    "len" => Rc::new(LangType::Nat).into(),
-                    _ => {
-                        let fn_type = type_manager.node_type(fn_name.id());
-                        if let Some(fn_type) = fn_type {
-                            if let LangType::Map(_, value) = fn_type.skip_alias().deref() {
-                                value.clone().into()
-                            } else {
-                                diagnostics.push(Diagnostic {
-                                    level: diagnostic::Level::Warning,
-                                    range: fn_name.range().into(),
-                                    message: "函数类型错误".to_string(),
-                                });
-                                unknown.into()
-                            }
-                        } else {
-                            diagnostics.push(Diagnostic {
-                                level: diagnostic::Level::Warning,
-                                range: node.range().into(),
-                                message: "未找到函数定义".to_string(),
-                            });
-                            unknown.into()
+                            func.infer_return_type(args).into()
                         }
+                        _ => unknown.into(),
                     }
+                } else {
+                    diagnostics.push(Diagnostic {
+                        level: diagnostic::Level::Error,
+                        range: node.range().into(),
+                        message: format!("未找到函数 {}", str_name),
+                    });
+                    None
                 }
             } else {
                 diagnostics.push(Diagnostic {

@@ -1,4 +1,4 @@
-use crate::type_manager::LangType;
+use crate::lang_type::LangType;
 use std::{collections::HashMap, rc::Rc};
 use tree_sitter::Node;
 
@@ -6,6 +6,7 @@ use tree_sitter::Node;
 pub enum Symbol {
     Type(Rc<LangType>),
     Variable(Rc<LangType>),
+    Function(Rc<LangType>),
 }
 
 type SymbolTable = HashMap<String, Symbol>;
@@ -31,17 +32,21 @@ impl SymbolManager {
             .insert(name.into(), symbol);
     }
 
-    pub fn resolve_symbol(&self, from: Node, name: &str) -> Option<Symbol> {
+    pub fn resolve_symbol(&self, from: Node, name: &str) -> Option<&Symbol> {
         let mut node = Some(from);
         while node.is_some() {
             let _node = node.unwrap();
             if let Some(symbol_table) = self.symbols.get(&_node.id()) {
                 if let Some(symbol) = symbol_table.get(name) {
-                    return Some(symbol.clone());
+                    return Some(symbol);
                 }
             }
             node = node.unwrap().parent();
         }
         None
+    }
+
+    pub fn node_symbols(&self, node: &Node) -> Option<&SymbolTable> {
+        self.symbols.get(&node.id())
     }
 }

@@ -32,10 +32,6 @@
             "named": true
           },
           {
-            "type": "list_expression",
-            "named": true
-          },
-          {
             "type": "map_expression",
             "named": true
           },
@@ -53,6 +49,10 @@
           },
           {
             "type": "reference_expression",
+            "named": true
+          },
+          {
+            "type": "set_expression",
             "named": true
           },
           {
@@ -176,10 +176,6 @@
             "named": true
           },
           {
-            "type": "list_expression",
-            "named": true
-          },
-          {
             "type": "map_expression",
             "named": true
           },
@@ -197,6 +193,10 @@
           },
           {
             "type": "reference_expression",
+            "named": true
+          },
+          {
+            "type": "set_expression",
             "named": true
           },
           {
@@ -264,10 +264,6 @@
           "named": true
         },
         {
-          "type": "list_expression",
-          "named": true
-        },
-        {
           "type": "map_expression",
           "named": true
         },
@@ -285,6 +281,10 @@
         },
         {
           "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "set_expression",
           "named": true
         },
         {
@@ -322,10 +322,6 @@
           },
           {
             "type": "enumeration_type",
-            "named": true
-          },
-          {
-            "type": "list_type",
             "named": true
           },
           {
@@ -421,10 +417,6 @@
           "named": true
         },
         {
-          "type": "list_expression",
-          "named": true
-        },
-        {
           "type": "map_expression",
           "named": true
         },
@@ -442,6 +434,10 @@
         },
         {
           "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "set_expression",
           "named": true
         },
         {
@@ -476,10 +472,6 @@
           "named": true
         },
         {
-          "type": "list_type",
-          "named": true
-        },
-        {
           "type": "map_type",
           "named": true
         },
@@ -493,6 +485,107 @@
         },
         {
           "type": "type_identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "function_definition",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "function_definition_item",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "function_definition_item",
+    "named": true,
+    "fields": {
+      "function_name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "parameter": {
+        "multiple": true,
+        "required": false,
+        "types": [
+          {
+            "type": "composite_type",
+            "named": true
+          },
+          {
+            "type": "enumeration_type",
+            "named": true
+          },
+          {
+            "type": "map_type",
+            "named": true
+          },
+          {
+            "type": "primitive_type",
+            "named": true
+          },
+          {
+            "type": "set_type",
+            "named": true
+          },
+          {
+            "type": "type_identifier",
+            "named": true
+          }
+        ]
+      },
+      "return_type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "composite_type",
+            "named": true
+          },
+          {
+            "type": "enumeration_type",
+            "named": true
+          },
+          {
+            "type": "map_type",
+            "named": true
+          },
+          {
+            "type": "primitive_type",
+            "named": true
+          },
+          {
+            "type": "set_type",
+            "named": true
+          },
+          {
+            "type": "type_identifier",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": false,
+      "required": false,
+      "types": [
+        {
+          "type": "generic_types",
           "named": true
         }
       ]
@@ -518,55 +611,15 @@
     }
   },
   {
-    "type": "list_expression",
-    "named": true,
-    "fields": {
-      "items": {
-        "multiple": false,
-        "required": false,
-        "types": [
-          {
-            "type": "expression_list",
-            "named": true
-          }
-        ]
-      }
-    }
-  },
-  {
-    "type": "list_type",
+    "type": "generic_types",
     "named": true,
     "fields": {},
     "children": {
-      "multiple": false,
+      "multiple": true,
       "required": true,
       "types": [
         {
-          "type": "composite_type",
-          "named": true
-        },
-        {
-          "type": "enumeration_type",
-          "named": true
-        },
-        {
-          "type": "list_type",
-          "named": true
-        },
-        {
-          "type": "map_type",
-          "named": true
-        },
-        {
-          "type": "primitive_type",
-          "named": true
-        },
-        {
-          "type": "set_type",
-          "named": true
-        },
-        {
-          "type": "type_identifier",
+          "type": "identifier",
           "named": true
         }
       ]
@@ -620,10 +673,6 @@
             "named": true
           },
           {
-            "type": "list_expression",
-            "named": true
-          },
-          {
             "type": "map_expression",
             "named": true
           },
@@ -641,6 +690,10 @@
           },
           {
             "type": "reference_expression",
+            "named": true
+          },
+          {
+            "type": "set_expression",
             "named": true
           },
           {
@@ -682,10 +735,6 @@
             "named": true
           },
           {
-            "type": "list_expression",
-            "named": true
-          },
-          {
             "type": "map_expression",
             "named": true
           },
@@ -703,6 +752,10 @@
           },
           {
             "type": "reference_expression",
+            "named": true
+          },
+          {
+            "type": "set_expression",
             "named": true
           },
           {
@@ -734,10 +787,6 @@
             "named": true
           },
           {
-            "type": "list_type",
-            "named": true
-          },
-          {
             "type": "map_type",
             "named": true
           },
@@ -765,10 +814,6 @@
           },
           {
             "type": "enumeration_type",
-            "named": true
-          },
-          {
-            "type": "list_type",
             "named": true
           },
           {
@@ -828,10 +873,6 @@
           "named": true
         },
         {
-          "type": "list_expression",
-          "named": true
-        },
-        {
           "type": "map_expression",
           "named": true
         },
@@ -849,6 +890,10 @@
         },
         {
           "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "set_expression",
           "named": true
         },
         {
@@ -933,14 +978,6 @@
           "named": true
         },
         {
-          "type": "list_expression",
-          "named": true
-        },
-        {
-          "type": "list_type",
-          "named": true
-        },
-        {
           "type": "map_expression",
           "named": true
         },
@@ -966,6 +1003,10 @@
         },
         {
           "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "set_expression",
           "named": true
         },
         {
@@ -1044,10 +1085,6 @@
           "named": true
         },
         {
-          "type": "list_expression",
-          "named": true
-        },
-        {
           "type": "map_expression",
           "named": true
         },
@@ -1065,6 +1102,10 @@
         },
         {
           "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "set_expression",
           "named": true
         },
         {
@@ -1153,10 +1194,6 @@
           "named": true
         },
         {
-          "type": "list_expression",
-          "named": true
-        },
-        {
           "type": "map_expression",
           "named": true
         },
@@ -1174,6 +1211,10 @@
         },
         {
           "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "set_expression",
           "named": true
         },
         {
@@ -1207,6 +1248,22 @@
     }
   },
   {
+    "type": "set_expression",
+    "named": true,
+    "fields": {
+      "items": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "expression_list",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
     "type": "set_type",
     "named": true,
     "fields": {},
@@ -1220,10 +1277,6 @@
         },
         {
           "type": "enumeration_type",
-          "named": true
-        },
-        {
-          "type": "list_type",
           "named": true
         },
         {
@@ -1253,6 +1306,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "function_definition",
+          "named": true
+        },
         {
           "type": "module_definition",
           "named": true
@@ -1305,10 +1362,6 @@
         },
         {
           "type": "identifier",
-          "named": true
-        },
-        {
-          "type": "list_type",
           "named": true
         },
         {
@@ -1378,10 +1431,6 @@
           "named": true
         },
         {
-          "type": "list_expression",
-          "named": true
-        },
-        {
           "type": "map_expression",
           "named": true
         },
@@ -1399,6 +1448,10 @@
         },
         {
           "type": "reference_expression",
+          "named": true
+        },
+        {
+          "type": "set_expression",
           "named": true
         },
         {
@@ -1445,10 +1498,6 @@
         },
         {
           "type": "identifier",
-          "named": true
-        },
-        {
-          "type": "list_type",
           "named": true
         },
         {
@@ -1560,11 +1609,11 @@
   },
   {
     "type": "char",
-    "named": true
+    "named": false
   },
   {
     "type": "char",
-    "named": false
+    "named": true
   },
   {
     "type": "composed",
@@ -1599,6 +1648,10 @@
     "named": false
   },
   {
+    "type": "function",
+    "named": false
+  },
+  {
     "type": "identifier",
     "named": true
   },
@@ -1608,15 +1661,11 @@
   },
   {
     "type": "int",
-    "named": true
+    "named": false
   },
   {
     "type": "int",
-    "named": false
-  },
-  {
-    "type": "list",
-    "named": false
+    "named": true
   },
   {
     "type": "map",
@@ -1676,11 +1725,11 @@
   },
   {
     "type": "real",
-    "named": false
+    "named": true
   },
   {
     "type": "real",
-    "named": true
+    "named": false
   },
   {
     "type": "rem",
@@ -1692,11 +1741,11 @@
   },
   {
     "type": "string",
-    "named": false
+    "named": true
   },
   {
     "type": "string",
-    "named": true
+    "named": false
   },
   {
     "type": "to",
