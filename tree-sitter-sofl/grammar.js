@@ -91,7 +91,7 @@ module.exports = grammar({
           $.enumeration_type,
           $.set_type,
           $.map_type,
-          $.composite_type,
+          $.composite_type
         )
       ),
 
@@ -121,7 +121,7 @@ module.exports = grammar({
         ),
         "end"
       ),
-       _expression: ($) =>
+    _expression: ($) =>
       choice(
         $._constant_expression,
         $.unary_expression,
@@ -148,8 +148,18 @@ module.exports = grammar({
       ),
     reference_expression: ($) =>
       choice($.identifier, seq($.reference_expression, ".", $.identifier)),
-    set_expression: ($) =>
+    set_expression: ($) => choice($.set_const_expression, $.set_def_expression),
+    set_const_expression: ($) =>
       seq("{", optional(field("items", $.expression_list)), "}"),
+    set_def_expression: ($) =>
+      seq(
+        "{",
+        field("exp", $._expression),
+        "|",
+        optional(seq(field("binding", $.binding_list), "&")),
+        field("cond", $._expression),
+        "}"
+      ),
     map_expression: ($) =>
       seq(
         "{",

@@ -1,17 +1,18 @@
 mod context;
 mod diagnostic;
+mod lang_type;
 mod symbol_manager;
 pub mod type_manager;
 mod type_node;
 mod types;
 mod utils;
-mod lang_type;
 
 use std::{cell::RefCell, rc::Rc};
 
 use crate::context::Context;
 use serde::Serialize;
 use tree_sitter::{Parser, TreeCursor};
+use type_node::type_node;
 
 #[derive(Serialize, Debug)]
 pub struct EvaluateResult {
@@ -37,14 +38,26 @@ pub fn evaluate_type(source_code: String) -> EvaluateResult {
 }
 
 fn traverse(cursor: &mut TreeCursor, ctx: Rc<RefCell<Context>>) {
-    if cursor.goto_first_child() {
-        traverse(cursor, ctx.clone());
-        while cursor.goto_next_sibling() {
-            traverse(cursor, ctx.clone());
+    let node = cursor.node();
+    match node.kind() {
+        "set_def_expression" => {
+            vec!["binding", "exp", "cond"].iter().for_each(|field| {
+                node.child_by_field_name(field)
+                    .and_then(|field| traverse(&mut field.walk(), ctx.clone()).into());
+            });
+            type_node::type_node(node, ctx.clone());
         }
-        cursor.goto_parent();
+        _ => {
+            if cursor.goto_first_child() {
+                traverse(cursor, ctx.clone());
+                while cursor.goto_next_sibling() {
+                    traverse(cursor, ctx.clone());
+                }
+                cursor.goto_parent();
+            }
+            type_node::type_node(cursor.node(), ctx.clone());
+        }
     }
-    type_node::type_node(cursor, ctx.clone());
 }
 
 mod tests {

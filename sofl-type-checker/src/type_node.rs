@@ -11,9 +11,9 @@ use std::{
     ops::{Deref, DerefMut},
     rc::Rc,
 };
-use tree_sitter::TreeCursor;
+use tree_sitter::Node;
 
-pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
+pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
     let mut ctx = ctx.borrow_mut();
     let Context {
         source_bytes,
@@ -24,7 +24,6 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
         collect_types,
     } = ctx.deref_mut();
 
-    let node = cursor.node();
     if node.is_error() {
         diagnostics.push(Diagnostic {
             level: diagnostic::Level::Error,
@@ -266,7 +265,7 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             None
         }
         // expressions
-        "set_expression" => Rc::new(
+        "set_const_expression" => Rc::new(
             if let Some(Some(Some(result))) = node.child_by_field_name("items").map(|items| {
                 items
                     .child(0)
@@ -278,6 +277,22 @@ pub fn type_node(cursor: &TreeCursor, ctx: Rc<RefCell<Context>>) {
             },
         )
         .into(),
+        "set_def_expression" => {
+            let expr = node.child_by_field_name("exp");
+            if let Some(expr) = expr {
+                Rc::new(LangType::Set(
+                    type_manager.node_type(expr.id()).unwrap_or_default(),
+                ))
+                .into()
+            } else {
+                diagnostics.push(Diagnostic {
+                    level: diagnostic::Level::Error,
+                    range: node.range().into(),
+                    message: "集合定义错误".to_string(),
+                });
+                unknown.into()
+            }
+        }
         "map_item" => {
             let key = node.child_by_field_name("key");
             let value = node.child_by_field_name("value");

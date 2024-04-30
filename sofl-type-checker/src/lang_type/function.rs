@@ -10,13 +10,14 @@ pub struct FunctionType {
 
 impl FunctionType {
     pub fn infer_return_type(&self, args: Vec<Rc<LangType>>) -> Rc<LangType> {
-        let mut map = HashMap::new();
-        for (expect, actual) in self.arguments.iter().zip(args.iter()).rev() {
-            expect.infer(actual.clone()).iter().for_each(|(k, v)| {
-                map.insert(k.clone(), v.clone());
-            });
-        }
-        self.return_type.specialize(&map)
+        self.return_type
+            .specialize(&self.arguments.iter().zip(args.iter()).rev().fold(
+                HashMap::new(),
+                |mut map, (expect, actual)| {
+                    map.extend(expect.infer(actual.clone()));
+                    map
+                },
+            ))
     }
 }
 
