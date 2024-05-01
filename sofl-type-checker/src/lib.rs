@@ -1,27 +1,27 @@
-mod context;
-mod diagnostic;
+pub mod context;
 mod lang_type;
-mod symbol_manager;
-pub mod type_manager;
 mod type_node;
 mod types;
 mod utils;
 
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::context::Context;
+use context::symbol_manager::SymbolTable;
 use serde::Serialize;
-use tree_sitter::{Parser, TreeCursor};
-use type_node::type_node;
+use tree_sitter::Parser;
 
 #[derive(Serialize, Debug)]
 pub struct EvaluateResult {
-    diagnostics: Vec<diagnostic::Diagnostic>,
+    diagnostics: Vec<context::diagnostic::Diagnostic>,
     type_details: Vec<types::TypeDetail>,
 }
 
-pub fn evaluate_type(source_code: String) -> EvaluateResult {
-    let ctx = Rc::new(RefCell::new(Context::new(source_code.clone())));
+pub fn evaluate_type(
+    source_code: String,
+    symbols: context::symbol_manager::SymbolTable,
+) -> EvaluateResult {
+    let ctx = Rc::new(RefCell::new(Context::new(source_code.clone(), symbols)));
     let mut parser = Parser::new();
     parser
         .set_language(&tree_sitter_sofl::language())
@@ -29,7 +29,7 @@ pub fn evaluate_type(source_code: String) -> EvaluateResult {
     let tree = parser.parse(source_code, None).unwrap();
 
     let mut cursor = tree.walk();
-    traverse(&mut cursor, ctx.clone());
+    type_node::traverse(&mut cursor, ctx.clone());
     let ctx = ctx.borrow_mut();
     EvaluateResult {
         diagnostics: ctx.diagnostics.clone(),
@@ -37,30 +37,29 @@ pub fn evaluate_type(source_code: String) -> EvaluateResult {
     }
 }
 
-fn traverse(cursor: &mut TreeCursor, ctx: Rc<RefCell<Context>>) {
-    let node = cursor.node();
-    match node.kind() {
-        "set_def_expression" => {
-            vec!["binding", "exp", "cond"].iter().for_each(|field| {
-                node.child_by_field_name(field)
-                    .and_then(|field| traverse(&mut field.walk(), ctx.clone()).into());
-            });
-            type_node::type_node(node, ctx.clone());
-        }
-        _ => {
-            if cursor.goto_first_child() {
-                traverse(cursor, ctx.clone());
-                while cursor.goto_next_sibling() {
-                    traverse(cursor, ctx.clone());
-                }
-                cursor.goto_parent();
-            }
-            type_node::type_node(cursor.node(), ctx.clone());
-        }
-    }
+pub fn collect_symbols(source_code: String) -> SymbolTable {
+    let ctx = Rc::new(RefCell::new(Context::new(
+        source_code.clone(),
+        HashMap::new(),
+    )));
+    let mut parser = Parser::new();
+    parser
+        .set_language(&tree_sitter_sofl::language())
+        .expect("Error loading SOFL language");
+    let tree = parser.parse(source_code, None).unwrap();
+
+    let mut cursor = tree.walk();
+    type_node::traverse(&mut cursor, ctx.clone());
+    let ctx = ctx.borrow_mut();
+    ctx.symbol_manager
+        .node_symbols(&tree.root_node())
+        .unwrap_or(&HashMap::new())
+        .clone()
 }
 
+#[cfg(test)]
 mod tests {
+
     #[test]
     fn test_typed_syntax_tree() {
         let source_code = r#"
@@ -84,6 +83,6 @@ pre abs(1) = 0
 post true
 end_process;
         "#;
-        super::evaluate_type(source_code.to_string());
+        super::evaluate_type(source_code.to_string(), std::collections::HashMap::new());
     }
 }

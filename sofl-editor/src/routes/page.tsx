@@ -7,7 +7,7 @@ import { Panel } from '@/components/panel';
 const Index = () => (
   <ResizeBox.Split
     direction="horizontal"
-    size={0.7}
+    size={0.65}
     max={0.8}
     min={0.2}
     className="h-full w-full"

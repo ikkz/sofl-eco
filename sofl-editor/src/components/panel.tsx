@@ -1,6 +1,7 @@
 import { Alert, Button, Dropdown, List, Menu } from '@arco-design/web-react';
 import { IconUpload, IconList } from '@arco-design/web-react/icon';
 import { useAtomValue, useSetAtom } from 'jotai';
+import { PredefinedButton } from './predefine-button';
 import { templates } from '@/templates';
 import { codeAtom, evaluateResultAtom } from '@/state';
 import { TSRange } from '@/types';
@@ -9,9 +10,10 @@ import { AppEvent, emitter } from '@/event';
 export const Panel = () => {
   const setCode = useSetAtom(codeAtom);
   const result = useAtomValue(evaluateResultAtom);
+
   return (
     <div className="px-4 overflow-y-auto">
-      <div className="text-lg font-semibold mb-2 mt-6">编辑文件</div>
+      <div className="text-lg font-semibold mb-2 mt-6">编辑</div>
       <div>
         <Dropdown
           trigger="click"
@@ -26,12 +28,13 @@ export const Panel = () => {
           }
         >
           <Button type="primary" icon={<IconList />}>
-            填充模板
+            模板
           </Button>
         </Dropdown>
         <Button className="ml-3" icon={<IconUpload />}>
-          文件导入
+          导入
         </Button>
+        <PredefinedButton />
       </div>
       <div className="text-lg font-semibold mb-2 mt-6">诊断</div>
       <List

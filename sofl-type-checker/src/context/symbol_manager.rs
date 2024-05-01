@@ -9,17 +9,19 @@ pub enum Symbol {
     Function(Rc<LangType>),
 }
 
-type SymbolTable = HashMap<String, Symbol>;
+pub type SymbolTable = HashMap<String, Symbol>;
 
 #[derive(Debug)]
 pub struct SymbolManager {
     symbols: HashMap<usize, SymbolTable>,
+    predefined_symbols: SymbolTable,
 }
 
 impl SymbolManager {
-    pub fn new() -> Self {
+    pub fn new(predefined_symbols: SymbolTable) -> Self {
         SymbolManager {
             symbols: HashMap::new(),
+            predefined_symbols
         }
     }
 
@@ -43,7 +45,7 @@ impl SymbolManager {
             }
             node = node.unwrap().parent();
         }
-        None
+        self.predefined_symbols.get(name)
     }
 
     pub fn node_symbols(&self, node: &Node) -> Option<&SymbolTable> {

@@ -2,8 +2,14 @@ import { invoke } from '@tauri-apps/api';
 import sum from 'lodash-es/sum';
 import { EvaluateResult } from '@/types';
 
-export async function getEvaluateResult(code: string) {
-  const result: EvaluateResult = await invoke('evaluate', { sourceCode: code });
+export async function getEvaluateResult(
+  code: string,
+  predefinedSymbols: string[],
+) {
+  const result: EvaluateResult = await invoke('evaluate', {
+    sourceCode: code,
+    predefinedSymbols,
+  });
   const lines = code.split('\n').map(line => line.length + 1);
   result.diagnostics.forEach(({ range }) => {
     range.from =

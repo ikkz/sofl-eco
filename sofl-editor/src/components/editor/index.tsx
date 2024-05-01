@@ -39,7 +39,7 @@ export const Editor = () => {
       value={code}
       onChange={onChange}
       theme={githubLight}
-      className="text-base h-full"
+      className="main-editor text-base h-full"
       ref={editorRef}
       extensions={[
         cursorTooltipBaseTheme,

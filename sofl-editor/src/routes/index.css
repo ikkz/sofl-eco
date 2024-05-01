@@ -8,6 +8,6 @@ body,
   height: 100%;
 }
 
-.cm-editor {
+.main-editor .cm-editor {
   height: 100%;
 }

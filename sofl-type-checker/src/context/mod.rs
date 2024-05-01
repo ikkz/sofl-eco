@@ -1,7 +1,12 @@
-use crate::{
-    diagnostic::Diagnostic, symbol_manager::SymbolManager, type_manager::TypeManager,
-    types::TypeDetail,
-};
+pub mod diagnostic;
+pub mod symbol_manager;
+pub mod type_manager;
+
+use symbol_manager::*;
+use type_manager::*;
+use diagnostic::Diagnostic;
+
+use crate::types::TypeDetail;
 
 #[derive(Debug)]
 pub struct Context {
@@ -14,9 +19,9 @@ pub struct Context {
 }
 
 impl Context {
-    pub fn new(source: String) -> Self {
+    pub fn new(source: String, predefined_symbols: SymbolTable) -> Self {
         Context {
-            symbol_manager: SymbolManager::new(),
+            symbol_manager: SymbolManager::new(predefined_symbols),
             type_manager: TypeManager::new(),
             source_bytes: source.as_bytes().to_vec(),
             source,

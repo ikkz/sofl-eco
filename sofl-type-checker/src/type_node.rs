@@ -1,7 +1,7 @@
+use crate::context::diagnostic::{self, Diagnostic};
+use crate::context::symbol_manager::Symbol;
 use crate::context::Context;
-use crate::diagnostic::{self, Diagnostic};
 use crate::lang_type::{self, LangType};
-use crate::symbol_manager::Symbol;
 use crate::types::TypeDetail;
 use crate::utils::collect_kind;
 use itertools::Itertools;
@@ -12,7 +12,30 @@ use std::{
     rc::Rc,
 };
 use tree_sitter::Node;
+use tree_sitter::TreeCursor;
 
+pub fn traverse(cursor: &mut TreeCursor, ctx: Rc<RefCell<Context>>) {
+    let node = cursor.node();
+    match node.kind() {
+        "set_def_expression" => {
+            vec!["binding", "exp", "cond"].iter().for_each(|field| {
+                node.child_by_field_name(field)
+                    .and_then(|field| traverse(&mut field.walk(), ctx.clone()).into());
+            });
+            type_node(node, ctx.clone());
+        }
+        _ => {
+            if cursor.goto_first_child() {
+                traverse(cursor, ctx.clone());
+                while cursor.goto_next_sibling() {
+                    traverse(cursor, ctx.clone());
+                }
+                cursor.goto_parent();
+            }
+            type_node(cursor.node(), ctx.clone());
+        }
+    }
+}
 pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
     let mut ctx = ctx.borrow_mut();
     let Context {
@@ -354,6 +377,7 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
                 let right_type = type_manager.node_type(right.id()).unwrap_or_default();
                 if left_type.skip_alias().deref() != right_type.skip_alias().deref()
                     && !["inset", "notinset"].contains(&operator.kind())
+                    && !(left_type.is_numeric() && right_type.is_numeric())
                 {
                     diagnostics.push(Diagnostic {
                         level: diagnostic::Level::Warning,
