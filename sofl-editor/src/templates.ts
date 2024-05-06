@@ -1,6 +1,20 @@
 export const templates = [
   {
-    name: 'ATM 模块',
+    name: 'Showcase1',
+    code: `module Command;
+
+process init()
+pre true
+post true
+end_process;
+
+process Receive_Command(balance:real | w_draw:real) sel: bool
+pre true
+post bound(balance)  and sel = true or bound(w_draw)  and sel = false
+end_process;`,
+  },
+  {
+    name: 'Showcase2',
     code: `module ATM;
 type
     Account = composed of
@@ -17,27 +31,28 @@ post (exists[x: account_file] x = account1 and x.balance >= amount and cash = am
 end_process;`,
   },
   {
-    name: '复杂类型',
-    code: `module A;
+    name: 'Showcase3',
+    code: `module ATM;
 type
-  A = int;
-  B = real;
-  C = composed of
-    a: A;
-    b: B;
-  end;
-  D = composed of
-    a: A
-    c: C;
-  end;
-  E = map int to string;
-var
-  e: D;
+    Account = composed of
+        balance: real;
+        account_no: nat;
+        password: nat;
+    end;
 
-process Hello(input_f: A | input_g: B | str: string) output_h: C | output_i: D
-ext rd files: E
-pre (input_f + str) <> 0 and files(input_g) = "index" or (1+2) inset {1,2,3,4,5,6,7}
-post output_i.c.b = output_h.b and input_f = output_h.a
+process Check_Password(card_id: nat| sel: bool| pass: nat)
+                                      account1: Account | 
+                                      pr_meg: string | 
+                                      account2: Account
+ext
+  rd account_file: set of Account
+pre true
+post sel = false and 
+               (exists[x: account_file] x.account_no = card_id and x.password = pass and account1 = x) or 
+               sel = true and
+               (exists[x: account_file] x.account_no = card_id and x.password= pass and account2 =x) or 
+               not (exists[x: account_file] x.account_no = card_id and x.password = pass) and pr_meg = "Reenter 
+               your password or insert thecorrect card"                         
 end_process;`,
   },
 ];
