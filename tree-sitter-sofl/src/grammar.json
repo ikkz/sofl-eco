@@ -1104,35 +1104,23 @@
                   "members": [
                     {
                       "type": "STRING",
-                      "value": "="
+                      "value": "*"
                     },
                     {
                       "type": "STRING",
-                      "value": "<>"
+                      "value": "/"
                     },
                     {
                       "type": "STRING",
-                      "value": "<"
+                      "value": "div"
                     },
                     {
                       "type": "STRING",
-                      "value": "<="
+                      "value": "rem"
                     },
                     {
                       "type": "STRING",
-                      "value": ">"
-                    },
-                    {
-                      "type": "STRING",
-                      "value": ">="
-                    },
-                    {
-                      "type": "STRING",
-                      "value": "inset"
-                    },
-                    {
-                      "type": "STRING",
-                      "value": "notinset"
+                      "value": "mod"
                     }
                   ]
                 }
@@ -1170,23 +1158,11 @@
                   "members": [
                     {
                       "type": "STRING",
-                      "value": "*"
+                      "value": "+"
                     },
                     {
                       "type": "STRING",
-                      "value": "/"
-                    },
-                    {
-                      "type": "STRING",
-                      "value": "div"
-                    },
-                    {
-                      "type": "STRING",
-                      "value": "rem"
-                    },
-                    {
-                      "type": "STRING",
-                      "value": "mod"
+                      "value": "-"
                     }
                   ]
                 }
@@ -1224,11 +1200,35 @@
                   "members": [
                     {
                       "type": "STRING",
-                      "value": "+"
+                      "value": "="
                     },
                     {
                       "type": "STRING",
-                      "value": "-"
+                      "value": "<>"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "<"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "<="
+                    },
+                    {
+                      "type": "STRING",
+                      "value": ">"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": ">="
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "inset"
+                    },
+                    {
+                      "type": "STRING",
+                      "value": "notinset"
                     }
                   ]
                 }

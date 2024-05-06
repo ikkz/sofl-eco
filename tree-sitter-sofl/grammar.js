@@ -172,13 +172,13 @@ module.exports = grammar({
       prec(11, seq(choice("-", "not", "~"), $._expression)),
     binary_expression: ($) =>
       choice(
+        binary_operators(10, ["*", "/", "div", "rem", "mod"], $._expression),
+        binary_operators(9, ["+", "-"], $._expression),
         binary_operators(
-          10,
+          8,
           ["=", "<>", "<", "<=", ">", ">=", "inset", "notinset"],
           $._expression
         ),
-        binary_operators(9, ["*", "/", "div", "rem", "mod"], $._expression),
-        binary_operators(8, ["+", "-"], $._expression),
         binary_operators(7, ["and"], $._expression),
         binary_operators(6, ["or"], $._expression),
         binary_operators(5, ["=>", "<=>"], $._expression)

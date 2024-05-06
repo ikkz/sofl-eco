@@ -1,0 +1,31 @@
+==================
+Showcase
+==================
+
+      module Test;
+      var
+        x: int;
+      process hello()
+      pre 1 + x = 3
+      post true
+      end_process;
+---
+
+(source_file
+  (module_definition
+    (identifier))
+  (variable_definition
+    (variable_definition_item
+      (identifier)
+      (primitive_type)))
+  (process_definition
+    (process_definition_item
+      (identifier)
+      (process_body
+        (binary_expression
+          (binary_expression
+            (int)
+            (reference_expression
+              (identifier)))
+          (int))
+        (bool)))))
