@@ -18,9 +18,11 @@ pub fn traverse(cursor: &mut TreeCursor, ctx: Rc<RefCell<Context>>) {
     let node = cursor.node();
     match node.kind() {
         "set_def_expression" => {
-            vec!["binding", "exp", "cond"].iter().for_each(|field| {
-                node.child_by_field_name(field)
-                    .and_then(|field| traverse(&mut field.walk(), ctx.clone()).into());
+            ["binding", "exp", "cond"].iter().for_each(|field| {
+                node.child_by_field_name(field).and_then(|field| {
+                    traverse(&mut field.walk(), ctx.clone());
+                    ().into()
+                });
             });
             type_node(node, ctx.clone());
         }
@@ -60,11 +62,11 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
     let node_type: Option<Rc<LangType>> = match node.kind() {
         "type_identifier" => {
             if let Some(child) = node.child(0) {
-                match symbol_manager.resolve_symbol(node, child.utf8_text(&source_bytes).unwrap()) {
+                match symbol_manager.resolve_symbol(node, child.utf8_text(source_bytes).unwrap()) {
                     Some(Symbol::Type(lang_type)) => lang_type.clone().into(),
                     Some(Symbol::Variable(lang_type)) => match lang_type.deref().clone() {
                         LangType::Set(_) | LangType::List(_) => {
-                            Rc::new(LangType::Variable(lang_type.clone().into())).into()
+                            Rc::new(LangType::Variable(lang_type.clone())).into()
                         }
                         _ => lang_type.clone().into(),
                     },
@@ -84,10 +86,10 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
             .child(0)
             .map(|child| {
                 type_manager.node_type(child.id()).unwrap_or_else(|| {
-                    match child.utf8_text(&source_bytes).unwrap() {
-                        "nat" => Rc::new(LangType::Nat).into(),
-                        "nat0" => Rc::new(LangType::Nat0).into(),
-                        _ => unknown.into(),
+                    match child.utf8_text(source_bytes).unwrap() {
+                        "nat" => Rc::new(LangType::Nat),
+                        "nat0" => Rc::new(LangType::Nat0),
+                        _ => unknown,
                     }
                 })
             })
@@ -96,7 +98,7 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
         "enumeration_type" => Rc::new(LangType::Enumeration(
             collect_kind(&mut node.walk(), "identifier")
                 .iter()
-                .map(|n| n.utf8_text(&source_bytes).unwrap().into())
+                .map(|n| n.utf8_text(source_bytes).unwrap().into())
                 .collect::<Vec<_>>()
                 .into(),
         ))
@@ -131,9 +133,9 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
                 .map(|iter| {
                     let pair = iter.collect::<Vec<_>>();
                     let name = pair
-                        .get(0)
+                        .first()
                         .unwrap()
-                        .utf8_text(&source_bytes)
+                        .utf8_text(source_bytes)
                         .unwrap()
                         .into();
                     let lang_type = pair
@@ -158,7 +160,7 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
                 .unwrap_or_default();
             if let Some(name) = node
                 .child_by_field_name("function_name")
-                .map(|node| node.utf8_text(&source_bytes).unwrap().to_string())
+                .map(|node| node.utf8_text(source_bytes).unwrap().to_string())
             {
                 if let Some(Some(parent)) = node.parent().map(|p| p.parent()) {
                     symbol_manager.add_symbol(
@@ -169,7 +171,7 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
                                 arguments,
                                 return_type,
                                 generics: symbol_manager.node_symbols(&node).map_or_else(
-                                    || vec![],
+                                    std::vec::Vec::new,
                                     |table| {
                                         table
                                             .values()
@@ -196,11 +198,11 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
         }
         "type_definition_item" => {
             if let (Some(identifier), Some(lang_type)) = (node.child(0), node.child(2)) {
-                let name: String = { identifier.utf8_text(&source_bytes).unwrap().into() };
+                let name: String = { identifier.utf8_text(source_bytes).unwrap().into() };
                 let lang_type = type_manager.node_type(lang_type.id()).unwrap_or_default();
                 collect_types.push(TypeDetail {
                     range: identifier.range().into(),
-                    source: identifier.utf8_text(&source_bytes).unwrap().to_string(),
+                    source: identifier.utf8_text(source_bytes).unwrap().to_string(),
                     type_str: lang_type.to_string(),
                     type_expanded: lang_type.expanded_type(),
                 });
@@ -216,11 +218,11 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
         }
         "variable_definition_item" => {
             if let (Some(identifier), Some(lang_type)) = (node.child(0), node.child(2)) {
-                let name: String = { identifier.utf8_text(&source_bytes).unwrap().into() };
+                let name: String = { identifier.utf8_text(source_bytes).unwrap().into() };
                 let lang_type = type_manager.node_type(lang_type.id()).unwrap_or_default();
                 collect_types.push(TypeDetail {
                     range: identifier.range().into(),
-                    source: identifier.utf8_text(&source_bytes).unwrap().to_string(),
+                    source: identifier.utf8_text(source_bytes).unwrap().to_string(),
                     type_str: lang_type.to_string(),
                     type_expanded: lang_type.expanded_type(),
                 });
@@ -233,7 +235,7 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
         "generic_types" => {
             let parent = node.parent().unwrap();
             for id in collect_kind(&mut node.walk(), "identifier") {
-                let generic_name = id.utf8_text(&source_bytes).unwrap();
+                let generic_name = id.utf8_text(source_bytes).unwrap();
                 let generic_type = LangType::Generic(generic_name.into());
                 symbol_manager.add_symbol(&parent, generic_name, Symbol::Type(generic_type.into()));
             }
@@ -248,10 +250,10 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
                 if let Some(lang_type) = lang_type {
                     let lang_type = lang_type.variable_type();
                     nodes.iter().for_each(|n| {
-                        let name: String = n.utf8_text(&source_bytes).unwrap().into();
+                        let name: String = n.utf8_text(source_bytes).unwrap().into();
                         collect_types.push(TypeDetail {
                             range: n.range().into(),
-                            source: n.utf8_text(&source_bytes).unwrap().to_string(),
+                            source: n.utf8_text(source_bytes).unwrap().to_string(),
                             type_str: lang_type.to_string(),
                             type_expanded: lang_type.expanded_type(),
                         });
@@ -267,11 +269,11 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
         }
         "ext_item" => {
             if let (Some(name_node), Some(lang_type)) = (node.child(1), node.child(3)) {
-                let name: String = name_node.utf8_text(&source_bytes).unwrap().into();
+                let name: String = name_node.utf8_text(source_bytes).unwrap().into();
                 let lang_type = type_manager.node_type(lang_type.id()).unwrap_or_default();
                 collect_types.push(TypeDetail {
                     range: name_node.range().into(),
-                    source: name_node.utf8_text(&source_bytes).unwrap().to_string(),
+                    source: name_node.utf8_text(source_bytes).unwrap().to_string(),
                     type_str: lang_type.to_string(),
                     type_expanded: lang_type.expanded_type(),
                 });
@@ -385,8 +387,8 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
                         message: format!(
                             "操作符 {} 的左类型 {} 和右类型 {} 不匹配",
                             operator.kind(),
-                            left_type.to_string(),
-                            right_type.to_string(),
+                            left_type,
+                            right_type,
                         ),
                     })
                 }
@@ -403,7 +405,7 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
         "reference_expression" => {
             if node.child_count() == 1 {
                 let child = node.child(0).unwrap();
-                let name = child.utf8_text(&source_bytes).unwrap();
+                let name = child.utf8_text(source_bytes).unwrap();
                 match symbol_manager.resolve_symbol(node, name) {
                     Some(Symbol::Variable(lang_type)) | Some(Symbol::Function(lang_type)) => {
                         lang_type.clone().into()
@@ -413,19 +415,19 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
             } else if let (Some(refer), Some(id)) = (node.child(0), node.child(2)) {
                 let left_type = type_manager.node_type(refer.id()).unwrap_or_default();
                 if let LangType::Composite(fields) = left_type.skip_alias().deref() {
-                    let name: String = id.utf8_text(&source_bytes).unwrap().into();
+                    let name: String = id.utf8_text(source_bytes).unwrap().into();
                     let field_type = fields.get(&name);
                     if field_type.is_none() {
                         diagnostics.push(Diagnostic {
                             range: node.range().into(),
                             level: diagnostic::Level::Warning,
-                            message: format!("类型 {} 没有成员 {}", left_type.to_string(), name),
+                            message: format!("类型 {} 没有成员 {}", left_type, name),
                         });
                     }
                     let field_type = field_type.cloned().unwrap_or_default();
                     collect_types.push(TypeDetail {
                         range: id.range().into(),
-                        source: id.utf8_text(&source_bytes).unwrap().to_string(),
+                        source: id.utf8_text(source_bytes).unwrap().to_string(),
                         type_str: field_type.to_string(),
                         type_expanded: field_type.expanded_type(),
                     });
@@ -452,7 +454,7 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
             let fn_name = node.child(0);
             let expr_list = node.child(2);
             if let Some(fn_name) = fn_name {
-                let str_name = fn_name.utf8_text(&source_bytes).unwrap();
+                let str_name = fn_name.utf8_text(source_bytes).unwrap();
                 let args = if expr_list.is_some_and(|n| n.kind() == "expression_list") {
                     let expr_list = expr_list.unwrap();
                     expr_list
@@ -514,10 +516,10 @@ pub fn type_node(node: Node, ctx: Rc<RefCell<Context>>) {
         _ => None,
     };
     if let Some(lang_type) = node_type {
-        type_manager.set_node_type(node.id(), lang_type.clone().into());
+        type_manager.set_node_type(node.id(), lang_type.clone());
         collect_types.push(TypeDetail {
             range: node.range().into(),
-            source: node.utf8_text(&source_bytes).unwrap().to_string(),
+            source: node.utf8_text(source_bytes).unwrap().to_string(),
             type_str: lang_type.to_string(),
             type_expanded: lang_type.expanded_type(),
         });

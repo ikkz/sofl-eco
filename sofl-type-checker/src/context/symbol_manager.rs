@@ -21,7 +21,7 @@ impl SymbolManager {
     pub fn new(predefined_symbols: SymbolTable) -> Self {
         SymbolManager {
             symbols: HashMap::new(),
-            predefined_symbols
+            predefined_symbols,
         }
     }
 
@@ -30,7 +30,7 @@ impl SymbolManager {
 
         self.symbols
             .entry(node_id)
-            .or_insert(HashMap::new())
+            .or_default()
             .insert(name.into(), symbol);
     }
 

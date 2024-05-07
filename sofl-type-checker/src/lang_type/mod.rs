@@ -2,8 +2,9 @@ pub mod function;
 
 use std::{collections::HashMap, fmt::Display, mem::discriminant, ops::Deref, rc::Rc};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub enum LangType {
+    #[default]
     Unknown,
     Nat,
     Nat0,
@@ -24,33 +25,27 @@ pub enum LangType {
     Function(function::FunctionType),
 }
 
-impl Default for LangType {
-    fn default() -> Self {
-        LangType::Unknown
-    }
-}
-
 impl LangType {
     pub fn skip_alias(&self) -> Rc<LangType> {
         let mut lang_type = self;
         while let Self::Alias(_, alias_type) = lang_type {
             lang_type = alias_type;
         }
-        return lang_type.clone().into();
+        lang_type.clone().into()
     }
 
     pub fn is_numeric(&self) -> bool {
-        match self.skip_alias().deref() {
-            LangType::Nat | LangType::Nat0 | LangType::Int | LangType::Real => true,
-            _ => false,
-        }
+        matches!(
+            self.skip_alias().deref(),
+            LangType::Nat | LangType::Nat0 | LangType::Int | LangType::Real
+        )
     }
 
     pub fn is_set_like(&self) -> bool {
-        match self.skip_alias().deref() {
-            LangType::Set(_) | LangType::List(_) | LangType::Map(_, _) => true,
-            _ => false,
-        }
+        matches!(
+            self.skip_alias().deref(),
+            LangType::Set(_) | LangType::List(_) | LangType::Map(_, _)
+        )
     }
 
     pub fn variable_type(&self) -> Rc<LangType> {
@@ -79,7 +74,7 @@ impl LangType {
                 }
                 format!("composed of {} end;", s)
             }
-            LangType::Alias(_, t) => format!("{}", t.expanded_type()),
+            LangType::Alias(_, t) => t.expanded_type(),
             _ => self.to_string(),
         }
     }
@@ -88,7 +83,7 @@ impl LangType {
         let mut map = HashMap::new();
         if let LangType::Generic(name) = self {
             map.insert(name.clone(), actual);
-        } else if discriminant(self) == discriminant(&actual.deref()) {
+        } else if discriminant(self) == discriminant(actual.deref()) {
             self.infer_directly(actual, &mut map);
         } else if discriminant(self) == discriminant(&actual.skip_alias()) {
             self.infer_directly(actual.skip_alias(), &mut map);
@@ -115,13 +110,11 @@ impl LangType {
     pub fn specialize(&self, map: &HashMap<String, Rc<LangType>>) -> Rc<LangType> {
         match self {
             LangType::Generic(name) => map.get(name).unwrap_or(&Rc::new(LangType::Unknown)).clone(),
-            LangType::Set(t) => LangType::Set(t.specialize(map).into()).into(),
-            LangType::List(t) => LangType::List(t.specialize(map).into()).into(),
-            LangType::Map(k, v) => {
-                LangType::Map(k.specialize(map).into(), v.specialize(map).into()).into()
-            }
+            LangType::Set(t) => LangType::Set(t.specialize(map)).into(),
+            LangType::List(t) => LangType::List(t.specialize(map)).into(),
+            LangType::Map(k, v) => LangType::Map(k.specialize(map), v.specialize(map)).into(),
             LangType::MapItem(k, v) => {
-                LangType::MapItem(k.specialize(map).into(), v.specialize(map).into()).into()
+                LangType::MapItem(k.specialize(map), v.specialize(map)).into()
             }
             LangType::Alias(_, t) => t.skip_alias().specialize(map),
             _ => self.clone().into(),

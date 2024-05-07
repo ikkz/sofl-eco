@@ -1,8 +1,14 @@
-use std::{collections::HashMap, rc::Rc};
 use crate::lang_type::LangType;
+use std::{collections::HashMap, rc::Rc};
 #[derive(Debug)]
 pub struct TypeManager {
     types: HashMap<usize, Rc<LangType>>,
+}
+
+impl Default for TypeManager {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl TypeManager {
